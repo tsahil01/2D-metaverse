@@ -70,7 +70,7 @@ describe("Authentication", () => {
   });
 });
 
-describe("User Routes", async () => {
+describe("User Metadeta endpoint", async () => {
   let token = "";
   let avatarId = "";
 
@@ -135,4 +135,48 @@ describe("User Routes", async () => {
     );
     expect(res.status).toBe(403);
   });
+});
+
+describe("User avatar information", async () => {
+    let token = "";
+    let avatarId = "";
+    let userId = "";
+
+    beforeAll(async () => {
+        const username = "user" + Math.random();
+        const password = "password";
+
+        await axios.post(`${backendUrl}/api/v1/signup`, {
+            username,
+            password,
+            type: "user",
+        });
+
+        const res = await axios.post(`${backendUrl}/api/v1/signin`, {
+            username,
+            password,
+        });
+
+        token = res.data.token;
+        userId = res.data.userId;
+    })
+
+    test("get back avatar info for user", async () => {
+        const avatarRes = await axios.get(`${backendUrl} /api/v1/user/metadata/bulk?ids=[${userId}]`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        expect(avatarRes.data.avatars.length).toBe(1);
+        expect(avatarRes.data.avatars[0].userId).toBe(userId);
+        
+        avatarId = avatarRes.data[0].avatarId;
+    });
+
+    test("get all avaible avatar that user has created", async () => {
+        const avatarRes = await axios.get(`${backendUrl}/api/v1/avatars`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        expect(avatarRes.data.avatars.length).not.toBe(0);
+        const currentAvatar = avatarRes.data.avatars.find(x => x.avatarId === avatarId);
+        expect(currentAvatar).tobeDefined();
+    });
 });
