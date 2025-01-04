@@ -68,5 +68,71 @@ describe("Authentication", () => {
     expect(res.status).toBe(403);
     expect(res.data).toHaveProperty("message");
   });
+});
 
+describe("User Routes", async () => {
+  let token = "";
+  let avatarId = "";
+
+  beforeAll(async () => {
+    const username = "user" + Math.random();
+    const password = "password";
+    const type = "admin";
+
+    // signup
+    await axios.post(`${backendUrl}/api/v1/signup`, {
+      username,
+      password,
+      type,
+    });
+
+    const res = await axios.post(`${backendUrl}/api/v1/signin`, {
+      username,
+      password,
+    });
+
+    token = res.data.token;
+
+    const avatarRes = await axios.post(`${backendUrl}/api/v1/admin/avatar`, {
+      imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm3RFDZM21teuCMFYx_AROjt-AzUwDBROFww&s",
+      name: "Timmy",
+    }, { headers: { Authorization: `Bearer ${token}`,}
+    });
+    avatarId = avatarRes.data.avatarId;
+
+  });
+
+  test("User cant update their metadata with wrong avatar id", async () => {
+    const avatarId = "123";
+    const res = await axios.post(`${backendUrl}/api/v1/user/metadata`, {
+      avatarId,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}`, },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test("User can update their metadata", async () => {
+    expect(avatarId).not.toBe("");
+    const res = await axios.post(
+      `${backendUrl}/api/v1/user/metadata`, {
+        avatarId,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}`, },
+      }
+    );
+    expect(res.status).toBe(200);
+  });
+
+  test("User cant update their metadata if token is not send to server (unauth)", async () => {
+    expect(avatarId).not.toBe("");
+    const res = await axios.post(
+      `${backendUrl}/api/v1/user/metadata`, {
+        avatarId,
+      }
+    );
+    expect(res.status).toBe(403);
+  });
 });
