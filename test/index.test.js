@@ -592,7 +592,6 @@ describe("Arena endpoint", () => {
 
     expect(res.status).toBe(200);
     expect(newRes.data.elements).length.toBe(3);
-
   });
 
   test("add element fails for non existing x and y", async () => {
@@ -610,7 +609,6 @@ describe("Arena endpoint", () => {
     );
 
     expect(res.status).toBe(400);
-
   });
 
   test("cannot add element to the space if error element id", async () => {
@@ -628,22 +626,297 @@ describe("Arena endpoint", () => {
     expect(res.status).toBe(400);
   });
 
-  test('delete the element from the arena', async () => {
-    const res = await axios.delete(`${backendUrl}/api/v1/space/element`, {
-      spaceId,
-      element1Id
-    }, { headers: { Authorization: `Bearer ${userToken}` } });
+  test("delete the element from the arena", async () => {
+    const res = await axios.delete(
+      `${backendUrl}/api/v1/space/element`,
+      {
+        spaceId,
+        element1Id,
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
 
     expect(res.status).toBe(200);
     expect(res.data.elements).length.toBe(2);
-  })
+  });
 
-  test('see all available elements', async () => {
+  test("see all available elements", async () => {
     const res = await axios.get(`${backendUrl}/api/v1/elements`, {
-      headers: { Authorization: `Bearer ${userToken}` }
-    })
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
     expect(res.status).toBe(200);
     expect(res.data.elements.length).not.toBe(0);
-  })
-  
+  });
+});
+
+describe("Admin endpoints", () => {
+  let adminId;
+  let adminToken;
+  let userId;
+  let userToken;
+
+  beforeAll(async () => {
+    const adminUsername = "admin" + Math.random();
+    const adminPassword = "password";
+    const type = "admin";
+
+    const adminSignup = await axios.post(`${backendUrl}/api/v1/signup`, {
+      adminUsername,
+      adminPassword,
+      type,
+    });
+    adminId = adminSignup.data.userId;
+
+    const adminLogin = await axios.post(`${backendUrl}/api/v1/signin`, {
+      adminUsername,
+      adminPassword,
+    });
+    adminToken = adminLogin.data.token;
+
+    const username = "user" + Math.random();
+    const password = "password";
+
+    const userSignup = await axios.post(`${backendUrl}/api/v1/signup`, {
+      username,
+      password,
+      type: "user",
+    });
+    userId = userSignup.data.userId;
+
+    const userLogin = await axios.post(`${backendUrl}/api/v1/signin`, {
+      username,
+      password,
+    });
+    userToken = userLogin.data.token;
+  });
+
+  test("user cannot create elements", async () => {
+    const res = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
+
+    expect(res.status).toBe(403);
+  });
+
+  test("only admin creates element", async () => {
+    const elementsRes = await axios.get(`${backendUrl}/api/v1/elements`, {
+      headers: { Authorization: `Bearer ${adminToken}` }, // Sahil - I think this should be adminToken
+    });
+    const initialElementCount = elementsRes.data.elements.length;
+
+    const res = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+    expect(res.status).toBe(201);
+    expect(res.data).toHaveProperty("id");
+
+    const newCountRes = await axios.get(`${backendUrl}/api/v1/elements`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(newCountRes.data.elements.length).toBe(initialElementCount + 1);
+  });
+
+  test("user cannot update the elements imgUrl", async () => {
+    const createEleRes = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+    const elementId = createEleRes.data.id;
+
+    const res = await axios.put(
+      `${backendUrl}/api/v1/admin/element/${elementId}`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
+    expect(res.status).toBe(400);
+  });
+
+  test("only admin update the elements imgUrl", async () => {
+    const createEleRes = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+    const elementId = createEleRes.data.id;
+
+    const res = await axios.put(
+      `${backendUrl}/api/v1/admin/element/${elementId}`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+    expect(res.status).toBe(200);
+  });
+
+  test("only admin can create avatars", async () => {
+    const res = await axios.post(
+      `${backendUrl}/api/v1/admin/avatar`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm3RFDZM21teuCMFYx_AROjt-AzUwDBROFww&s",
+        name: "Timmy",
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+
+    expect(res.status).toBe(201);
+    expect(res.data).toHaveProperty("avatarId");
+  });
+
+  test("user cannot create avatars", async () => {
+    const res = await axios.post(
+      `${backendUrl}/api/v1/admin/avatar`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm3RFDZM21teuCMFYx_AROjt-AzUwDBROFww&s",
+        name: "Timmy",
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
+
+    expect(res.status).toBe(201);
+    expect(res.data).toHaveProperty("avatarId");
+  });
+
+  test("only admin can create maps", async () => {
+    // create element
+    const element1 = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+    const element1Id = element1.data.id;
+
+    const element2 = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+    const element2Id = element2.data.id;
+
+    const res = await axios.post(
+      `${backendUrl}/api/v1/admin/map`,
+      {
+        thumbnail: "https://thumbnail.com/a.png",
+        dimensions: "100x200",
+        name: "new map" + Math.random(),
+        defaultElements: [
+          {
+            elementId: element1Id,
+            x: 20,
+            y: 20,
+          },
+          {
+            elementId: element2Id,
+            x: 18,
+            y: 20,
+          },
+        ],
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+
+    expect(res.status).toBe(201);
+    expect(res.data).toHaveProperty("id");
+  });
+
+  test("user cannot create maps", async () => {
+    // create element
+    const element1 = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
+    const element1Id = element1.data.id;
+
+    const element2 = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
+    const element2Id = element2.data.id;
+
+    const res = await axios.post(
+      `${backendUrl}/api/v1/admin/map`,
+      {
+        thumbnail: "https://thumbnail.com/a.png",
+        dimensions: "100x200",
+        name: "new map" + Math.random(),
+        defaultElements: [
+          {
+            elementId: element1Id,
+            x: 20,
+            y: 20,
+          },
+          {
+            elementId: element2Id,
+            x: 18,
+            y: 20,
+          },
+        ],
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
+
+    expect(res.status).toBe(201);
+    expect(res.data).toHaveProperty("id");
+  });
 });
