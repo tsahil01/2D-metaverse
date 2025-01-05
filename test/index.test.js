@@ -920,3 +920,123 @@ describe("Admin endpoints", () => {
     expect(res.data).toHaveProperty("id");
   });
 });
+
+describe("Websocket tests", () => {
+  let adminToken;
+  let adminId;
+  let userToken;
+  let userId;
+
+  async function setupHttp() {
+    const adminUsername = "admin" + Math.random();
+    const username = "user" + Math.random();
+    const password = "password";
+
+    const adminSignup = await axios.post(`${backendUrl}/api/v1/signup`, {
+      username: adminUsername,
+      password,
+      type: "admin",
+    });
+    adminId = adminSignup.data.userId;
+
+    const adminLogin = await axios.post(`${backendUrl}/api/v1/signin`, {
+      username: adminUsername,
+      password,
+    });
+    adminToken = adminLogin.data.token;
+
+    const userSignup = await axios.post(`${backendUrl}/api/v1/signup`, {
+      username,
+      password,
+      type: "user",
+    });
+    userId = userSignup.data.userId;
+
+    const userLogin = await axios.post(`${backendUrl}/api/v1/signin`, {
+      username,
+      password,
+    });
+    userToken = userLogin.data.token;
+
+    // create elements
+    const element1Res = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+
+    const element2Res = await axios.post(
+      `${backendUrl}/api/v1/admin/element`,
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+    const element1Id = element1Res.data.id;
+    const element2Id = element2Res.data.id;
+
+    // create map
+    const createMapRes = await axios.post(
+      `${backendUrl}/api/v1/admin/map`,
+      {
+        thumbnail: "https://thumbnail.com/a.png",
+        dimensions: "100x200",
+        name: "100 person interview room",
+        defaultElements: [
+          {
+            elementId: element1Id,
+            x: 20,
+            y: 20,
+          },
+          {
+            elementId: element2Id,
+            x: 18,
+            y: 20,
+          },
+        ],
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } });
+    const mapId = createMapRes.data.id;
+
+    // create avatar
+    const createAvatarRes = await axios.post( `${backendUrl}/api/v1/admin/avatar`,{
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm3RFDZM21teuCMFYx_AROjt-AzUwDBROFww&s",
+        name: "Timmy",
+      }, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const avatarId = createAvatarRes.data.avatarId
+
+    // create space
+    const createSpaceRes = await axios.post(`${backendUrl}/api/v1/space`, {
+      "name": "Test" + Math.random(),
+      "dimensions": "100x200",
+      "mapId": mapId
+   });
+   const spaceId = createSpaceRes.data.spaceId;
+
+  //  add element
+  const addElement = await axios.post(`${backendUrl} /api/v1/space/element`, {
+    "elementId": element1Id,
+    "spaceId": spaceId,
+    "x": 50,
+    "y": 20
+  });
+
+
+
+  }
+
+  beforeAll(async () => {
+    
+  });
+});
