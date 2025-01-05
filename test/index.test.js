@@ -348,5 +348,61 @@ describe("Space Mngt", () => {
     expect(res.status).not.toBe(201);
   });
 
-  
+  test("user is not able to delete a space with incorrect spaceId", async () => {
+    const name = "space" + Math.random();
+
+    const res = await axios.delete(
+      `${backendUrl}/api/v1/space/randomInvalidId`,
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  test("user is not able to delete a space with correct spaceId", async () => {
+    const name = "space" + Math.random();
+    const dimension = "100x100";
+
+    const createSpaceRes = await axios.post(
+      `${backendUrl}/api/v1/space`,
+      {
+        name,
+        dimension,
+        mapId,
+      },
+      {
+        headers: { Authorization: `Bearer ${userToken}` },
+      }
+    );
+    const spaceId = createSpaceRes.data.spaceId;
+
+    const res = await axios.delete(`${backendUrl}/api/v1/space/${spaceId}`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+
+    expect(res.status).toBe(200);
+  });
+
+  test("get all spaces of a user", async () => {
+    const name = "space" + Math.random();
+    const dimension = "100x100";
+
+    await axios.post(
+      `${backendUrl}/api/v1/space`,
+      {
+        name,
+        dimension,
+        mapId,
+      },
+      {
+        headers: { Authorization: `Bearer ${userToken}` },
+      }
+    );
+
+    const res = await axios.get(`${backendUrl}/api/v1/space/all`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.spaces.length).not.toBe(0);
+  });
 });
