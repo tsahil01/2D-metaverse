@@ -1,6 +1,7 @@
 const axios = require("axios");
 
 const backendUrl = "http://localhost:3000";
+const wsServerUrl = "ws://localhost:3001";
 
 describe("Authentication", () => {
   test("User be able to sign up", async () => {
@@ -926,6 +927,10 @@ describe("Websocket tests", () => {
   let adminId;
   let userToken;
   let userId;
+  let ws1;
+  let ws2; 
+  let ws1Messages = []; 
+  let ws2Messages = []; 
 
   async function setupHttp() {
     const adminUsername = "admin" + Math.random();
@@ -1005,38 +1010,78 @@ describe("Websocket tests", () => {
           },
         ],
       },
-      { headers: { Authorization: `Bearer ${adminToken}` } });
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
     const mapId = createMapRes.data.id;
 
     // create avatar
-    const createAvatarRes = await axios.post( `${backendUrl}/api/v1/admin/avatar`,{
+    const createAvatarRes = await axios.post(
+      `${backendUrl}/api/v1/admin/avatar`,
+      {
         imageUrl:
           "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm3RFDZM21teuCMFYx_AROjt-AzUwDBROFww&s",
         name: "Timmy",
-      }, { headers: { Authorization: `Bearer ${adminToken}` } });
-    const avatarId = createAvatarRes.data.avatarId
+      },
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    );
+    const avatarId = createAvatarRes.data.avatarId;
 
     // create space
-    const createSpaceRes = await axios.post(`${backendUrl}/api/v1/space`, {
-      "name": "Test" + Math.random(),
-      "dimensions": "100x200",
-      "mapId": mapId
-   });
-   const spaceId = createSpaceRes.data.spaceId;
+    const createSpaceRes = await axios.post(
+      `${backendUrl}/api/v1/space`,
+      {
+        name: "Test" + Math.random(),
+        dimensions: "100x200",
+        mapId: mapId,
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
+    const spaceId = createSpaceRes.data.spaceId;
 
-  //  add element
-  const addElement = await axios.post(`${backendUrl} /api/v1/space/element`, {
-    "elementId": element1Id,
-    "spaceId": spaceId,
-    "x": 50,
-    "y": 20
-  });
-
-
-
+    //  add element
+    const addElement = await axios.post(
+      `${backendUrl} /api/v1/space/element`,
+      {
+        elementId: element1Id,
+        spaceId: spaceId,
+        x: 50,
+        y: 20,
+      },
+      { headers: { Authorization: `Bearer ${userToken}` } }
+    );
   }
 
-  beforeAll(async () => {
-    
-  });
+  async function setupWS() {
+    ws1 = new WebSocket(wsServerUrl);
+    ws2 = new WebSocket(wsServerUrl);
+
+    await new Promise(r => {
+      ws1.onopen = r;
+    })
+    await new Promise(r => {
+      ws2.onopen = r;
+    })
+
+    ws1.onmessage = (event) => {
+      ws1Messages.push(JSON.parse(event.data))
+    }
+
+    ws2.onmessage = (event) => {
+      ws2Messages.push(JSON.parse(event.data))
+    }
+  }
+
+  async function waitForAndPopLtsMsg(msgArray){
+    return new Promise(r => {
+      if(msgArray.length > 0) {
+        return msgArray.shift();
+      } else {
+        setTimeout(() => {
+          
+        }, 100)
+      }
+    })
+  }
+
+  beforeAll(async () => {});
 });
