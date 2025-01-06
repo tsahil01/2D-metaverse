@@ -928,9 +928,13 @@ describe("Websocket tests", () => {
   let userToken;
   let userId;
   let ws1;
-  let ws2; 
-  let ws1Messages = []; 
-  let ws2Messages = []; 
+  let ws2;
+  let ws1Msgs = [];
+  let ws2Msgs = [];
+  let userX;
+  let userY;
+  let adminX;
+  let adminY;
 
   async function setupHttp() {
     const adminUsername = "admin" + Math.random();
@@ -1051,37 +1055,133 @@ describe("Websocket tests", () => {
     );
   }
 
-  async function setupWS() {
-    ws1 = new WebSocket(wsServerUrl);
-    ws2 = new WebSocket(wsServerUrl);
+  function waitForAndPopLtsMsgs(msgArr) {
+    return new Promise((r) => {
+      if (msgArr.length > 0) {
+        resolve(msgArr.shift());
+      } else {
+        let interval = setInterval(() => {
+          if (msgArr.length > 0) {
+            resolve(msgArr.shift());
+            clearInterval(interval);
+          }
+        }, 100);
+      }
+    });
+  }
 
-    await new Promise(r => {
+  async function setupWs() {
+    ws1 = new WebSocket();
+    ws2 = new WebSocket();
+
+    await new Promise((r) => {
       ws1.onopen = r;
-    })
-    await new Promise(r => {
+    });
+
+    await new Promise((r) => {
       ws2.onopen = r;
-    })
+    });
 
     ws1.onmessage = (event) => {
-      ws1Messages.push(JSON.parse(event.data))
-    }
+      ws1.push(JSON.parse(event.data));
+    };
 
     ws2.onmessage = (event) => {
-      ws2Messages.push(JSON.parse(event.data))
-    }
+      ws2.push(JSON.parse(event.data));
+    };
   }
 
-  async function waitForAndPopLtsMsg(msgArray){
-    return new Promise(r => {
-      if(msgArray.length > 0) {
-        return msgArray.shift();
-      } else {
-        setTimeout(() => {
-          
-        }, 100)
-      }
-    })
-  }
+  beforeAll(async () => {
+    setupHttp();
+    setupWs();
+  });
 
-  beforeAll(async () => {});
+  test("get back ack for joining the space", async () => {
+    ws1.send(
+      JSON.stringify({
+        type: "join",
+        payload: {
+          spaceId,
+          token: userToken,
+        },
+      })
+    );
+
+    ws2.send(
+      JSON.stringify({
+        type: "join",
+        payload: {
+          spaceId,
+          token: adminToken,
+        },
+      })
+    );
+
+    const msg1 = await waitForAndPopLtsMsgs(ws1Msgs);
+    const msg2 = await waitForAndPopLtsMsgs(ws2Msgs);
+
+    expect(msg1.type).toBe("space-joined");
+    expect(msg2.type).toBe("space-joined");
+    expect(msg1.payload.users.length + msg2.payload.users.length).toBe(1);
+
+    userX = msg1.payload.spawn.x;
+    userY = msg1.payload.spawn.y;
+
+    adminX = msg2.payload.spawn.x;
+    adminY = msg2.payload.spawn.y;
+  });
+
+  test("User should not be able to move across the boundry of the wall", async () => {
+    ws1.send( JSON.stringify({
+        type: "movement",
+        payload: { x: 20000000, y: 300000000,},
+      })
+    );
+
+    const msg = await waitForAndPopLtsMsgs(ws1Msgs);
+    expect(msg.type).toBe("movement-rejected");
+    expect(msg.payload.x).toBe(userX);
+    expect(msg.payload.y).toBe(userY);
+
+  });
+
+  test("User should not be able to move two blocks at the same time", async () => {
+    ws1.send( JSON.stringify({
+        type: "movement",
+        payload: { x: userX + 2, y: userY + 2,},
+      })
+    );
+
+    const msg = await waitForAndPopLtsMsgs(ws1Msgs);
+    expect(msg.type).toBe("movement-rejected");
+    expect(msg.payload.x).toBe(userX);
+    expect(msg.payload.y).toBe(userY);
+
+  });
+
+  test("User should be able to move one block and should broadcast to other user", async () => {
+    ws1.send( JSON.stringify({
+        type: "movement",
+        payload: { x: userX + 1, y: userY,},
+      })
+    );
+
+    const msg = await waitForAndPopLtsMsgs(ws2Msgs);
+    expect(msg.type).toBe("movement");
+    expect(msg.payload.x).toBe(userX + 1);
+    expect(msg.payload.y).toBe(userY);
+    expect(msg.payload.userId).toBe(userId);
+    userX = msg.payload.x;
+    userY = msg.payload.y;
+
+  });
+
+  test("If user leaves the space, other users should be notified", async () => {
+    ws1.close();
+    const msg = await waitForAndPopLtsMsgs(ws2Msgs);
+    expect(msg.type).toBe("user-left");
+    expect(msg.payload.userId).toBe(userId);
+  })
+
+
 });
