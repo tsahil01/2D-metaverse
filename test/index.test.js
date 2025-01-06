@@ -1071,8 +1071,8 @@ describe("Websocket tests", () => {
   }
 
   async function setupWs() {
-    ws1 = new WebSocket();
-    ws2 = new WebSocket();
+    ws1 = new WebSocket(wsServerUrl);
+    ws2 = new WebSocket(wsServerUrl);
 
     await new Promise((r) => {
       ws1.onopen = r;
