@@ -1072,20 +1072,19 @@ describe("Websocket tests", () => {
 
   async function setupWs() {
     ws1 = new WebSocket(wsServerUrl);
-    ws2 = new WebSocket(wsServerUrl);
-
+    
     await new Promise((r) => {
       ws1.onopen = r;
     });
+    ws1.onmessage = (event) => {
+      ws1.push(JSON.parse(event.data));
+    };
+    
+    ws2 = new WebSocket(wsServerUrl);
 
     await new Promise((r) => {
       ws2.onopen = r;
     });
-
-    ws1.onmessage = (event) => {
-      ws1.push(JSON.parse(event.data));
-    };
-
     ws2.onmessage = (event) => {
       ws2.push(JSON.parse(event.data));
     };
@@ -1106,6 +1105,7 @@ describe("Websocket tests", () => {
         },
       })
     );
+    const msg1 = await waitForAndPopLtsMsgs(ws1Msgs);
 
     ws2.send(
       JSON.stringify({
@@ -1117,18 +1117,24 @@ describe("Websocket tests", () => {
       })
     );
 
-    const msg1 = await waitForAndPopLtsMsgs(ws1Msgs);
     const msg2 = await waitForAndPopLtsMsgs(ws2Msgs);
+    const msg3 = await waitForAndPopLtsMsgs(ws1Msgs);
 
     expect(msg1.type).toBe("space-joined");
     expect(msg2.type).toBe("space-joined");
-    expect(msg1.payload.users.length + msg2.payload.users.length).toBe(1);
+    expect(msg1.payload.users.length).toBe(0);
+    expect(msg2.payload.users.length).toBe(1);
+    expect(msg3.type).toBe("user-joined");
+    expect(msg3.payload.userId).toBe(userId);
 
     userX = msg1.payload.spawn.x;
     userY = msg1.payload.spawn.y;
-
     adminX = msg2.payload.spawn.x;
     adminY = msg2.payload.spawn.y;
+
+    expect(msg3.payload.spawn.x).toBe(adminX);
+    expect(msg3.payload.spawn.y).toBe(adminY);
+
   });
 
   test("User should not be able to move across the boundry of the wall", async () => {
