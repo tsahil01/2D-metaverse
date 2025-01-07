@@ -10,4 +10,12 @@ router.use('/admin', admin);
 router.use('/space', space);
 router.use('/user', user);
 
+router.get("/elements", (req, res) => {
+    
+})
+
+router.get("/avatars", (req, res) => {
+
+})
+
 export default router
