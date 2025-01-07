@@ -2,6 +2,7 @@ import express from "express"
 import { SignupSchema } from "../../../types";
 import client from "@repo/db/client"
 import jwt from "jsonwebtoken";
+// import bcrypt from "bcrypt";
 import { JWT_SECRET } from "../../..";
 
 const auth = express.Router();
@@ -20,14 +21,15 @@ auth.post('/signup', async (req, res) => {
             data: {
                 username: parseData.data.username,
                 password: parseData.data.password,
-                role: parseData.data.type == "user" ? "User" : "Admin",
-                avatarId: parseData.data.avatarId
+                role: parseData.data.type == "user" ? "User" : "Admin"
             }
         });
+        console.log("newUser", newUser)
         res.status(200).json({
             userId: newUser.id
         })
     } catch (e) {
+        console.log(e)
         res.status(400).json({
             err: `Error on signup: ${e}`
         })
@@ -57,13 +59,22 @@ auth.post('/signin', async (req, res) => {
             })
             return;
         }
+        // const validUser = await bcrypt.compare(parseData.data.password, user.password);
+        // if (!validUser) {
+        //     res.status(403).json({ msg: "password is not valid" });
+        //     return;
+        // }
 
-        const token = jwt.sign({ user }, JWT_SECRET);
+        const token = jwt.sign({
+            userId: user.id,
+            role: user.role
+        }, JWT_SECRET);
+
         res.status(200).json({ token });
 
     } catch (e) {
         res.status(400).json({
-            err: `Error on signup: ${e}`
+            err: `Error on signin: ${e}`
         })
     }
 
