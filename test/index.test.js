@@ -3,24 +3,45 @@ const axios = require("axios");
 const backendUrl = "http://localhost:3000";
 const wsServerUrl = "ws://localhost:3001";
 
+async function singup(username, password, type) {
+  return await fetch(`${backendUrl}/api/v1/signup`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username,
+      password,
+      type,
+    }),
+  });
+}
+
+async function signin(username, password) {
+  return await fetch(`${backendUrl}/api/v1/signin`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username,
+      password,
+    }),
+  });
+}
+
 describe("Authentication", () => {
   test("User be able to sign up", async () => {
     const username = "user" + Math.random();
     const password = "password";
     const type = "user";
 
-    const res = await axios.post(`${backendUrl}/api/v1/signup`, {
-      username,
-      password,
-      type,
-    });
-    expect(res.status).toBe(201);
+    const res = await singup(username, password, type);
 
-    const sendAgainRes = await axios.post(`${backendUrl}/api/v1/signup`, {
-      username,
-      password,
-      type,
-    });
+    expect(res.status).toBe(200);
+
+    const sendAgainRes = await singup(username, password, type);
+
     expect(sendAgainRes.status).toBe(400);
   });
 
@@ -29,11 +50,7 @@ describe("Authentication", () => {
     const password = "password";
     const type = "user";
 
-    const res = await axios.post(`${backendUrl}/api/v1/signup`, {
-      username,
-      password,
-      type,
-    });
+    const res = await singup(username, password, type);
     expect(res.status).toBe(400);
   });
 
@@ -42,32 +59,25 @@ describe("Authentication", () => {
     const password = "12344232";
     const type = "user";
 
-    await axios.post(`${backendUrl}/api/v1/signup`, {
-      username,
-      password,
-      type,
-    });
+    await singup(username, password, type);
+    const res = await signin(username, password);
 
-    const res = await axios.post(`${backendUrl}/api/v1/signin`, {
-      username,
-      password,
-    });
+    const data = await res.json();
+    await console.log("data", data);
 
     expect(res.status).toBe(200);
-    expect(res.data).toHaveProperty("token");
+    expect(data).toHaveProperty("token");
   });
 
   test("Signin is fails if username and password is incorrect", async () => {
     const username = "user" + Math.random();
     const password = "12344232";
 
-    const res = await axios.post(`${backendUrl}/api/v1/signin`, {
-      username: "wrong" + username,
-      password,
-    });
+    const res = await signin(username, password);
+    const data = await res.json();
 
-    expect(res.status).toBe(403);
-    expect(res.data).toHaveProperty("message");
+    expect(res.status).toBe(400);
+    expect(data).toHaveProperty("msg");
   });
 });
 
@@ -81,18 +91,11 @@ describe("User Metadeta endpoint", () => {
     const type = "admin";
 
     // signup
-    await axios.post(`${backendUrl}/api/v1/signup`, {
-      username,
-      password,
-      type,
-    });
+    singup(username, password, type);
 
-    const res = await axios.post(`${backendUrl}/api/v1/signin`, {
-      username,
-      password,
-    });
-
-    token = res.data.token;
+    const res = await signin(username, password);
+    const data = await res.json();
+    token = data.token;
 
     const avatarRes = await axios.post(
       `${backendUrl}/api/v1/admin/avatar`,
@@ -122,23 +125,31 @@ describe("User Metadeta endpoint", () => {
 
   test("User can update their metadata", async () => {
     expect(avatarId).not.toBe("");
-    const res = await axios.post(
-      `${backendUrl}/api/v1/user/metadata`,
-      {
-        avatarId,
+    const res = await fetch(`${backendUrl}/api/v1/user/metadata`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+      body: JSON.stringify({
+        avatarId,
+      }),
+    });
     expect(res.status).toBe(200);
   });
 
   test("User cant update their metadata if token is not send to server (unauth)", async () => {
     expect(avatarId).not.toBe("");
-    const res = await axios.post(`${backendUrl}/api/v1/user/metadata`, {
-      avatarId,
+    const res = await fetch(`${backendUrl}/api/v1/user/metadata`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        avatarId,
+      }),
     });
+
     expect(res.status).toBe(403);
   });
 });
@@ -152,42 +163,44 @@ describe("User avatar information", () => {
     const username = "user" + Math.random();
     const password = "password";
 
-    await axios.post(`${backendUrl}/api/v1/signup`, {
-      username,
-      password,
-      type: "user",
-    });
+    await singup(username, password, "user");
 
-    const res = await axios.post(`${backendUrl}/api/v1/signin`, {
-      username,
-      password,
-    });
+    const res = await signin(username, password);
+    const data = await res.json();
 
-    token = res.data.token;
-    userId = res.data.userId;
+    token = data.token;
+    userId = data.userId;
   });
 
   test("get back avatar info for user", async () => {
-    const avatarRes = await axios.get(
-      `${backendUrl} /api/v1/user/metadata/bulk?ids=[${userId}]`,
+    const avatarRes = await fetch(
+      `${backendUrl}/api/v1/user/metadata/bulk?ids=[${userId}]`,
       {
-        headers: { Authorization: `Bearer ${token}` },
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
-    expect(avatarRes.data.avatars.length).toBe(1);
-    expect(avatarRes.data.avatars[0].userId).toBe(userId);
+    const data = await avatarRes.json();
 
-    avatarId = avatarRes.data[0].avatarId;
+    expect(data.avatars.length).toBe(1);
+    expect(data.avatars[0].userId).toBe(userId);
+    avatarId = data[0].avatarId;
   });
 
   test("get all avaible avatar that user has created", async () => {
-    const avatarRes = await axios.get(`${backendUrl}/api/v1/avatars`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const avatarRes = await fetch(`${backendUrl}/api/v1/avatars`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     });
-    expect(avatarRes.data.avatars.length).not.toBe(0);
-    const currentAvatar = avatarRes.data.avatars.find(
-      (x) => x.avatarId === avatarId
-    );
+    const data = await avatarRes.json();
+    expect(data.avatars.length).not.toBe(0);
+    const currentAvatar = data.avatars.find((x) => x.avatarId === avatarId);
     expect(currentAvatar).tobeDefined();
   });
 });
@@ -206,18 +219,13 @@ describe("Space Manegement", () => {
     const adminPassword = "password";
     const type = "admin";
 
-    const signup = await axios.post(`${backendUrl}/api/v1/signup`, {
-      adminUsername,
-      adminPassword,
-      type: "admin",
-    });
-    adminId = signup.data.userId;
+    const signupRes = await singup(adminUsername, adminPassword, type);
+    const data = await signupRes.json();
+    adminId = data.userId;
 
-    const res = await axios.post(`${backendUrl}/api/v1/signin`, {
-      adminUsername,
-      adminPassword,
-    });
-    adminToken = res.data.token;
+    const res = await signin(adminUsername, adminPassword);
+    const resData = await res.json();
+    adminToken = resData.token;
 
     // create element
     const element1Res = await axios.post(
@@ -280,71 +288,72 @@ describe("Space Manegement", () => {
     const username = "user" + Math.random();
     const userpassword = "password";
 
-    const userSignup = await axios.post(`${backendUrl}/api/v1/signup`, {
-      username: username,
-      password: userpassword,
-      type: "user",
-    });
-    userId = userSignup.data.userId;
+    const userSignup = await singup(username, userpassword, "user");
+    const userSignupData = await userSignup.json();
+    userId = userSignupData.userId;
 
-    const userRes = await axios.post(`${backendUrl}/api/v1/signin`, {
-      username,
-      password: userpassword,
-    });
-    userToken = userRes.data.token;
+    const userRes = await signin(username, userpassword);
+    const userResData = await userRes.json();
+    userToken = userResData.token;
   });
 
   test("user should create space", async () => {
     const name = "space" + Math.random();
     const dimension = "100x100";
 
-    const res = await axios.post(
-      `${backendUrl}/api/v1/space`,
-      {
+    const res = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
         name,
         dimension,
         mapId,
-      },
-      {
-        headers: { Authorization: `Bearer ${userToken}` },
-      }
-    );
+      }),
+    });
+
+    const data = await res.json();
 
     expect(res.status).toBe(201);
-    expect(res.data).toHaveProperty("spaceId");
+    expect(data).toHaveProperty("spaceId");
   });
 
   test("user should create space without mapId (empty space)", async () => {
     const name = "space" + Math.random();
     const dimension = "100x100";
 
-    const res = await axios.post(
-      `${backendUrl}/api/v1/space`,
-      {
+    const res = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
         name,
         dimension,
-      },
-      {
-        headers: { Authorization: `Bearer ${userToken}` },
-      }
-    );
+      }),
+    });
+
+    const data = await res.json();
 
     expect(res.status).toBe(201);
-    expect(res.data).toHaveProperty("spaceId");
+    expect(data).toHaveProperty("spaceId");
   });
 
   test("user is not able to create space without mapId and dimentions", async () => {
     const name = "space" + Math.random();
-
-    const res = await axios.post(
-      `${backendUrl}/api/v1/space`,
-      {
-        name,
+    const res = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
       },
-      {
-        headers: { Authorization: `Bearer ${userToken}` },
-      }
-    );
+      body: JSON.stringify({
+        name,
+      }),
+    });
 
     expect(res.status).not.toBe(201);
   });
@@ -352,10 +361,13 @@ describe("Space Manegement", () => {
   test("user is not able to delete a space with incorrect spaceId", async () => {
     const name = "space" + Math.random();
 
-    const res = await axios.delete(
-      `${backendUrl}/api/v1/space/randomInvalidId`,
-      { headers: { Authorization: `Bearer ${userToken}` } }
-    );
+    const res = await fetch(`${backendUrl}/api/v1/space/randomInvalidId`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
 
     expect(res.status).toBe(400);
   });
@@ -363,24 +375,29 @@ describe("Space Manegement", () => {
   test("user is able to delete a space with correct spaceId", async () => {
     const name = "space" + Math.random();
     const dimension = "100x100";
-
-    const createSpaceRes = await axios.post(
-      `${backendUrl}/api/v1/space`,
-      {
+    const createSpaceRes = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
         name,
         dimension,
         mapId,
-      },
-      {
-        headers: { Authorization: `Bearer ${userToken}` },
-      }
-    );
-    const spaceId = createSpaceRes.data.spaceId;
-
-    const res = await axios.delete(`${backendUrl}/api/v1/space/${spaceId}`, {
-      headers: { Authorization: `Bearer ${userToken}` },
+      }),
     });
 
+    const createSpaceData = await createSpaceRes.json();
+    const spaceId = createSpaceData.spaceId;
+
+    const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
     expect(res.status).toBe(200);
   });
 
@@ -388,56 +405,77 @@ describe("Space Manegement", () => {
     const name = "space" + Math.random();
     const dimension = "100x100";
 
-    const createSpaceRes = await axios.post(
-      `${backendUrl}/api/v1/space`,
-      {
+    const createSpaceRes = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
         name,
         dimension,
         mapId,
-      },
-      {
-        headers: { Authorization: `Bearer ${userToken}` },
-      }
-    );
-    const spaceId = createSpaceRes.data.spaceId;
-
-    const res = await axios.delete(`${backendUrl}/api/v1/space/${spaceId}`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      }),
     });
 
+    const createSpaceData = await createSpaceRes.json();
+    const spaceId = createSpaceData.spaceId;
+
+    const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+    });
     expect(res.status).not.toBe(200);
   });
 
   test("admin has no spaces", async () => {
-    const res = await axios.get(`${backendUrl}/api/v1/space/all`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+    const res = await fetch(`${backendUrl}/api/v1/space/all`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
     });
-    expect(res.data.spaces.length).toBe(0);
+    const data = await res.json();
+    expect(data.spaces.length).toBe(0);
   });
 
   test("get all spaces of a user", async () => {
     const name = "space" + Math.random();
     const dimension = "100x100";
 
-    await axios.post(
-      `${backendUrl}/api/v1/space`,
-      {
+    await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
         name,
         dimension,
         mapId,
-      },
-      {
-        headers: { Authorization: `Bearer ${userToken}` },
-      }
-    );
-
-    const res = await axios.get(`${backendUrl}/api/v1/space/all`, {
-      headers: { Authorization: `Bearer ${userToken}` },
+      }),
     });
+
+    const res = await fetch(`${backendUrl}/api/v1/space/all`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
+
+    const data = await res.json();
+
     expect(res.status).toBe(200);
-    expect(res.data.spaces.length).not.toBe(0);
+    expect(data.spaces.length).not.toBe(0);
   });
 });
+
+// change to fetch in below tests
 
 describe("Arena endpoint", () => {
   let mapId;
@@ -1072,14 +1110,14 @@ describe("Websocket tests", () => {
 
   async function setupWs() {
     ws1 = new WebSocket(wsServerUrl);
-    
+
     await new Promise((r) => {
       ws1.onopen = r;
     });
     ws1.onmessage = (event) => {
       ws1.push(JSON.parse(event.data));
     };
-    
+
     ws2 = new WebSocket(wsServerUrl);
 
     await new Promise((r) => {
@@ -1134,13 +1172,13 @@ describe("Websocket tests", () => {
 
     expect(msg3.payload.spawn.x).toBe(adminX);
     expect(msg3.payload.spawn.y).toBe(adminY);
-
   });
 
   test("User should not be able to move across the boundry of the wall", async () => {
-    ws1.send( JSON.stringify({
+    ws1.send(
+      JSON.stringify({
         type: "movement",
-        payload: { x: 20000000, y: 300000000,},
+        payload: { x: 20000000, y: 300000000 },
       })
     );
 
@@ -1148,13 +1186,13 @@ describe("Websocket tests", () => {
     expect(msg.type).toBe("movement-rejected");
     expect(msg.payload.x).toBe(userX);
     expect(msg.payload.y).toBe(userY);
-
   });
 
   test("User should not be able to move two blocks at the same time", async () => {
-    ws1.send( JSON.stringify({
+    ws1.send(
+      JSON.stringify({
         type: "movement",
-        payload: { x: userX + 2, y: userY + 2,},
+        payload: { x: userX + 2, y: userY + 2 },
       })
     );
 
@@ -1162,13 +1200,13 @@ describe("Websocket tests", () => {
     expect(msg.type).toBe("movement-rejected");
     expect(msg.payload.x).toBe(userX);
     expect(msg.payload.y).toBe(userY);
-
   });
 
   test("User should be able to move one block and should broadcast to other user", async () => {
-    ws1.send( JSON.stringify({
+    ws1.send(
+      JSON.stringify({
         type: "movement",
-        payload: { x: userX + 1, y: userY,},
+        payload: { x: userX + 1, y: userY },
       })
     );
 
@@ -1179,7 +1217,6 @@ describe("Websocket tests", () => {
     expect(msg.payload.userId).toBe(userId);
     userX = msg.payload.x;
     userY = msg.payload.y;
-
   });
 
   test("If user leaves the space, other users should be notified", async () => {
@@ -1187,7 +1224,5 @@ describe("Websocket tests", () => {
     const msg = await waitForAndPopLtsMsgs(ws2Msgs);
     expect(msg.type).toBe("user-left");
     expect(msg.payload.userId).toBe(userId);
-  })
-
-
+  });
 });
