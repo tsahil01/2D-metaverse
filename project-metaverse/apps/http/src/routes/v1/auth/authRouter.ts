@@ -1,5 +1,5 @@
 import express from "express"
-import { SignupSchema } from "../../../types";
+import { SigninSchema, SignupSchema } from "../../../types";
 import client from "@repo/db/client"
 import jwt from "jsonwebtoken";
 // import bcrypt from "bcrypt";
@@ -39,7 +39,7 @@ auth.post('/signup', async (req, res) => {
 
 auth.post('/signin', async (req, res) => {
     const data = req.body;
-    const parseData = SignupSchema.safeParse(data);
+    const parseData = SigninSchema.safeParse(data);
     if (!parseData.success) {
         console.log("Parse error");
         res.status(400).json({ msg: "Parse error" })
