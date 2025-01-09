@@ -246,280 +246,258 @@ describe("User avatar information", () => {
   });
 });
 
-// describe("Space Management", () => {
-//   let mapId;
-//   let element1Id;
-//   let element2Id;
-//   let adminId;
-//   let adminToken;
-//   let userId;
-//   let userToken;
+describe("Space Management", () => {
+  let mapId;
+  let element1Id;
+  let element2Id;
+  let adminId;
+  let adminToken;
+  let userId;
+  let userToken;
 
-//   beforeAll(async () => {
-//     const adminUsername = "user" + Math.random();
-//     const adminPassword = "password";
-//     const type = "admin";
+  beforeAll(async () => {
+    const adminUsername = "user" + Math.random();
+    const adminPassword = "password";
+    const type = "admin";
 
-//     const signupRes = await fetch(`${backendUrl}/api/v1/auth/signup`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         username: adminUsername,
-//         password: adminPassword,
-//         type,
-//       }),
-//     });
-//     const signupData = await signupRes.json();
-//     adminId = signupData.userId;
+    const signupRes = await singup(adminUsername, adminPassword, type);
 
-//     const signinRes = await fetch(`${backendUrl}/api/v1/auth/signin`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         username: adminUsername,
-//         password: adminPassword,
-//       }),
-//     });
-//     const signinData = await signinRes.json();
-//     adminToken = signinData.token;
+    const signinRes = await signin(adminUsername, adminPassword);
+    const signinData = await signinRes.json();
+    adminToken = signinData.token;
+    adminId = signinData.userId;
 
-//     // Create elements
-//     const element1Res = await fetch(`${backendUrl}/api/v1/admin/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//         width: 1,
-//         height: 1,
-//         static: true,
-//       }),
-//     });
-//     const element1Data = await element1Res.json();
-//     element1Id = element1Data.id;
+    // Create elements
+    const element1Res = await fetch(`${backendUrl}/api/v1/admin/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      }),
+    });
+    const element1Data = await element1Res.json();
+    element1Id = element1Data.id;
 
-//     const element2Res = await fetch(`${backendUrl}/api/v1/admin/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//         width: 1,
-//         height: 1,
-//         static: true,
-//       }),
-//     });
-//     const element2Data = await element2Res.json();
-//     element2Id = element2Data.id;
+    const element2Res = await fetch(`${backendUrl}/api/v1/admin/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      }),
+    });
+    const element2Data = await element2Res.json();
+    element2Id = element2Data.id;
 
-//     // Create map
-//     const mapRes = await fetch(`${backendUrl}/api/v1/admin/map`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         thumbnail: "https://thumbnail.com/a.png",
-//         dimensions: "100x200",
-//         name: "100 person interview room",
-//         defaultElements: [
-//           { elementId: element1Id, x: 20, y: 20 },
-//           { elementId: element2Id, x: 18, y: 20 },
-//         ],
-//       }),
-//     });
-//     const mapData = await mapRes.json();
-//     mapId = mapData.mapId;
+    // Create map
+    const mapRes = await fetch(`${backendUrl}/api/v1/admin/map`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        thumbnail: "https://thumbnail.com/a.png",
+        dimension: "100x200",
+        name: "100 person interview room",
+        defaultElements: [
+          { elementId: element1Id, x: 20, y: 20 },
+          { elementId: element2Id, x: 18, y: 20 },
+        ],
+      }),
+    });
+    const mapData = await mapRes.json();
+    mapId = mapData.id;
 
-//     // Create user
-//     const username = "user" + Math.random();
-//     const userPassword = "password";
+    // Create user
+    const username = "user" + Math.random();
+    const userPassword = "password";
 
-//     const userSignupRes = await fetch(`${backendUrl}/api/v1/auth/signup`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ username, password: userPassword, type: "user" }),
-//     });
-//     const userSignupData = await userSignupRes.json();
-//     userId = userSignupData.userId;
+    const userSignupRes = await singup(username, userPassword, "user");
+    const userSignupData = await userSignupRes.json();
 
-//     const userSigninRes = await fetch(`${backendUrl}/api/v1/auth/signin`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ username, password: userPassword }),
-//     });
-//     const userSigninData = await userSigninRes.json();
-//     userToken = userSigninData.token;
-//   });
+    const userSigninRes = await signin(username, userPassword);
+    const userSigninData = await userSigninRes.json();
+    userToken = userSigninData.token;
+    userId = userSigninData.userId;
+  });
 
-//   test("user should create space", async () => {
-//     const name = "space" + Math.random();
-//     const dimension = "100x100";
+  test("user should create space", async () => {
+    const name = "space" + Math.random();
+    const dimension = "100x100";
 
-//     const res = await fetch(`${backendUrl}/api/v1/space`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({ name, dimension, mapId }),
-//     });
-//     const data = await res.json();
+    const res = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({ name, dimension, mapId }),
+    });
+    const data = await res.json();
+    // console.log("data", data);
 
-//     expect(res.status).toBe(201);
-//     expect(data).toHaveProperty("spaceId");
-//   });
+    expect(res.status).toBe(201);
+    expect(data).toHaveProperty("spaceId");
+  });
 
-//   test("user should create space without mapId (empty space)", async () => {
-//     const name = "space" + Math.random();
-//     const dimension = "100x100";
+test("user should create space without mapId (empty space)", async () => {
+    const name = "space" + Math.random();
+    const dimension = "100x100";
 
-//     const res = await fetch(`${backendUrl}/api/v1/space`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({ name, dimension }),
-//     });
-//     const data = await res.json();
+    const res = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({ name, dimension }),
+    });
+    const data = await res.json();
 
-//     expect(res.status).toBe(201);
-//     expect(data).toHaveProperty("spaceId");
-//   });
+    expect(res.status).toBe(200);
+    expect(data).toHaveProperty("spaceId");
+  });
 
-//   test("user is not able to create space without mapId and dimensions", async () => {
-//     const name = "space" + Math.random();
+  test("user is not able to create space without mapId and dimension", async () => {
+    const name = "space" + Math.random();
 
-//     const res = await fetch(`${backendUrl}/api/v1/space`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({ name }),
-//     });
+    const res = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({ name }),
+    });
 
-//     expect(res.status).not.toBe(201);
-//   });
+    expect(res.status).not.toBe(201);
+  });
 
-//   test("user is not able to delete a space with incorrect spaceId", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/space/randomInvalidId`, {
-//       method: "DELETE",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//     });
+  test("user is not able to delete a space with incorrect spaceId", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/space/randomInvalidId`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
 
-//     expect(res.status).toBe(400);
-//   });
+    expect(res.status).toBe(400);
+  });
 
-//   test("user is able to delete a space with correct spaceId", async () => {
-//     const name = "space" + Math.random();
-//     const dimension = "100x100";
+  test("user is able to delete a space with correct spaceId", async () => {
+    const name = "space" + Math.random();
+    const dimension = "100x100";
 
-//     const createSpaceRes = await fetch(`${backendUrl}/api/v1/space`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({ name, dimension, mapId }),
-//     });
-//     const createSpaceData = await createSpaceRes.json();
-//     const spaceId = createSpaceData.spaceId;
+    const createSpaceRes = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({ name, dimension, mapId }),
+    });
+    const createSpaceData = await createSpaceRes.json();
+    const spaceId = createSpaceData.spaceId;
 
-//     const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
-//       method: "DELETE",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//     });
+    const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
 
-//     expect(res.status).toBe(200);
-//   });
-//   test("user should not be able to delete a space with incorrect token", async () => {
-//     const name = "space" + Math.random();
-//     const dimension = "100x100";
+    expect(res.status).toBe(200);
+  });
 
-//     const createSpaceRes = await fetch(`${backendUrl}/api/v1/space`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         name,
-//         dimension,
-//         mapId,
-//       }),
-//     });
+  test("user should not be able to delete a space with incorrect token", async () => {
+    const name = "space" + Math.random();
+    const dimension = "100x100";
 
-//     const createSpaceData = await createSpaceRes.json();
-//     const spaceId = createSpaceData.spaceId;
+    const createSpaceRes = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        name,
+        dimension,
+        mapId,
+      }),
+    });
 
-//     const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
-//       method: "DELETE",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//     });
-//     expect(res.status).not.toBe(200);
-//   });
+    const createSpaceData = await createSpaceRes.json();
+    const spaceId = createSpaceData.spaceId;
 
-//   test("admin has no spaces", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/space/all`, {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//     });
-//     const data = await res.json();
-//     expect(data.spaces.length).toBe(0);
-//   });
+    const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+    });
+    expect(res.status).not.toBe(200);
+  });
 
-//   test("get all spaces of a user", async () => {
-//     const name = "space" + Math.random();
-//     const dimension = "100x100";
+  test("admin has no spaces", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/space/all`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+    });
+    const data = await res.json();
+    expect(data.spaces.length).toBe(0);
+  });
 
-//     await fetch(`${backendUrl}/api/v1/space`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         name,
-//         dimension,
-//         mapId,
-//       }),
-//     });
+  test("get all spaces of a user", async () => {
+    const name = "space" + Math.random();
+    const dimension = "100x100";
 
-//     const res = await fetch(`${backendUrl}/api/v1/space/all`, {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//     });
+    await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        name,
+        dimension,
+        mapId,
+      }),
+    });
 
-//     const data = await res.json();
+    const res = await fetch(`${backendUrl}/api/v1/space/all`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
 
-//     expect(res.status).toBe(200);
-//     expect(data.spaces.length).not.toBe(0);
-//   });
-// });
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.spaces.length).not.toBe(0);
+  });
+});
 
 // describe("Arena endpoint", () => {
 //   let mapId;
@@ -592,7 +570,7 @@ describe("User avatar information", () => {
 //       },
 //       body: JSON.stringify({
 //         thumbnail: "https://thumbnail.com/a.png",
-//         dimensions: "100x200",
+//         dimension: "100x200",
 //         name: "new map" + Math.random(),
 //         defaultElements: [
 //           {
@@ -658,7 +636,7 @@ describe("User avatar information", () => {
 //       headers: { Authorization: `Bearer ${userToken}` },
 //     }).then((res) => res.json());
 //     expect(res.status).toBe(200);
-//     expect(res).toHaveProperty("dimensions");
+//     expect(res).toHaveProperty("dimension");
 //     expect(res).toHaveProperty("elements");
 //     expect(res.elements).length.toBe(2);
 //   });
@@ -1004,7 +982,7 @@ describe("Admin endpoints", () => {
 //       },
 //       body: JSON.stringify({
 //         thumbnail: "https://thumbnail.com/a.png",
-//         dimensions: "100x200",
+//         dimension: "100x200",
 //         name: "100 person interview room",
 //         defaultElements: [
 //           { elementId: element1Id, x: 20, y: 20 },
@@ -1038,7 +1016,7 @@ describe("Admin endpoints", () => {
 //       },
 //       body: JSON.stringify({
 //         name: "Test" + Math.random(),
-//         dimensions: "100x200",
+//         dimension: "100x200",
 //         mapId: mapId,
 //       }),
 //     }).then((res) => res.json());

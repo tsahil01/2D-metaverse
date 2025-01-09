@@ -82,8 +82,8 @@ admin.post(`/map`, adminMiddleware, async (req, res) => {
         data: {
             name: parseData.data.name,
             thumbnail: parseData.data.thumbnail,
-            height: parseInt(parseData.data.dimention.split("x")[0]),
-            width: parseInt(parseData.data.dimention.split("x")[1]),
+            height: parseInt(parseData.data.dimension.split("x")[0]),
+            width: parseInt(parseData.data.dimension.split("x")[1]),
             mapElements: {
                 create: parseData.data.defaultElements.map((element) => {
                     return {
