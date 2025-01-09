@@ -22,10 +22,32 @@ export const SigninSchema = z.object({
 
 export const UserMetadataUpdateSchema = z.object({
     avatarId: z.string()
-})
+});
 
 export const CreateAvatarSchema = z.object({
     imageUrl: z.string(),
     name: z.string()
 
-})
+});
+
+export const CreateElementSchema = z.object({
+    imageUrl: z.string(),
+    width: z.number(),
+    height: z.number(),
+    static: z.boolean()
+});
+
+export const UpdateElementSchema = z.object({
+    imageUrl: z.string(),
+});
+
+export const CreateMapSchema = z.object({
+    thumbnail: z.string(),
+    dimention: z.string().regex(/^\d+x\d+$/),
+    name: z.string(),
+    defaultElements: z.array(z.object({
+        elementId: z.string(),
+        x: z.number(),
+        y: z.number()
+    }))
+});
