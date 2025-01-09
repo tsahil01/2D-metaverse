@@ -1,4 +1,4 @@
-import z from "zod"
+import z, { map } from "zod"
 
 declare global {
     namespace Express {
@@ -43,11 +43,22 @@ export const UpdateElementSchema = z.object({
 
 export const CreateMapSchema = z.object({
     thumbnail: z.string(),
-    dimention: z.string().regex(/^\d+x\d+$/),
+    dimension: z.string().regex(/^\d+x\d+$/),
     name: z.string(),
     defaultElements: z.array(z.object({
         elementId: z.string(),
         x: z.number(),
         y: z.number()
     }))
+});
+
+export const CreateSpaceSchema = z.object({
+    name: z.string(),
+    dimension: z.string().regex(/^\d+x\d+$/),
+    mapId: z.string().optional(),
+    thumbnail: z.string().optional()
+})
+
+export const DeleteSpaceSchema = z.object({
+    spaceId: z.string()
 });
