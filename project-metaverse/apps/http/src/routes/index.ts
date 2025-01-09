@@ -3,6 +3,7 @@ import auth from "./v1/auth/authRouter";
 import admin from "./v1/admin/adminRouter";
 import space from "./v1/space/spaceRouter";
 import user from "./v1/user/userRouter";
+import client from "@repo/db/client"
 
 const router = express.Router();
 router.use('/', auth);
@@ -14,8 +15,9 @@ router.get("/elements", (req, res) => {
     
 })
 
-router.get("/avatars", (req, res) => {
-
+router.get("/avatars", async (req, res) => {
+    const avatars = await client.avatar.findMany()
+    res.json(avatars)
 })
 
 export default router
