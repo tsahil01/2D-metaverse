@@ -6,7 +6,7 @@ export function adminMiddleware(req: Request, res: Response, next: NextFunction)
     const headerToken = req.headers.authorization;
     const token = headerToken?.split(" ")[1];
     if (!token) {
-        res.status(403).json({ msgL: "Unauthorized" });
+        res.status(403).json({ msg: "Unauthorized" });
         return;
     }
 

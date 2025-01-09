@@ -11,7 +11,7 @@ auth.post('/signup', async (req, res) => {
     const data = req.body;
     const parseData = SignupSchema.safeParse(data);
     if (!parseData.success) {
-        console.log("Parse error");
+        // console.log("Parse error");
         res.status(400).json({ msg: "Parse error" })
         return;
     }
@@ -24,12 +24,12 @@ auth.post('/signup', async (req, res) => {
                 role: parseData.data.type == "user" ? "User" : "Admin"
             }
         });
-        console.log("newUser", newUser)
+        // console.log("newUser", newUser)
         res.status(200).json({
             userId: newUser.id
         })
     } catch (e) {
-        console.log(e)
+        console.error(e)
         res.status(400).json({
             err: `Error on signup: ${e}`
         })
@@ -41,7 +41,7 @@ auth.post('/signin', async (req, res) => {
     const data = req.body;
     const parseData = SigninSchema.safeParse(data);
     if (!parseData.success) {
-        console.log("Parse error");
+        // console.log("Parse error");
         res.status(400).json({ msg: "Parse error" })
         return;
     }
