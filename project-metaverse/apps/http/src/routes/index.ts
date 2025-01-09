@@ -16,8 +16,10 @@ router.get("/elements", (req, res) => {
 })
 
 router.get("/avatars", async (req, res) => {
-    const avatars = await client.avatar.findMany()
-    res.json(avatars)
+    const avatars = await client.avatar.findMany();
+    res.json({
+        avatars
+    })
 })
 
 export default router

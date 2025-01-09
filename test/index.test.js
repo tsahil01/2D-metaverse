@@ -61,7 +61,7 @@ describe("Authentication", () => {
     const res = await signin(username, password);
 
     const data = await res.json();
-    await console.log("data", data);
+    // await console.log("data", data);
 
     expect(res.status).toBe(200);
     expect(data).toHaveProperty("token");
@@ -160,56 +160,93 @@ describe("User Metadeta endpoint", () => {
   });
 });
 
-// describe("User avatar information", () => {
-//   let token = "";
-//   let avatarId = "";
-//   let userId = "";
+describe("User avatar information", () => {
+  let token = "";
+  let avatarId = "";
+  let userId = "";
+  let adminToken = "";
 
-//   beforeAll(async () => {
-//     const username = "user" + Math.random();
-//     const password = "password";
+  beforeAll(async () => {
+    const adminUsername = "admin" + Math.random();
+    const adminPassword = "password";
 
-//     await singup(username, password, "user");
+    await singup(adminUsername, adminPassword, "admin");
+    const adminRes = await signin(adminUsername, adminPassword);
+    const adminData = await adminRes.json();
+    adminToken = adminData.token;
 
-//     const res = await signin(username, password);
-//     const data = await res.json();
+    const avatarRes = await fetch(`${backendUrl}/api/v1/admin/avatar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQm3RFDZM21teuCMFYx_AROjt-AzUwDBROFww&s",
+        name: "Timmy2" + Math.random(),
+      }),
+    });
+    const avatarResData = await avatarRes.json();
+    console.log("avatarResData", avatarResData);
+    avatarId = avatarResData.avatarId;
 
-//     token = data.token;
-//     userId = data.userId;
-//   });
+    const username = "user" + Math.random();
+    const password = "password";
+    await singup(username, password, "user");
 
-//   test("get back avatar info for user", async () => {
-//     const avatarRes = await fetch(
-//       `${backendUrl}/api/v1/user/metadata/bulk?ids=[${userId}]`,
-//       {
-//         method: "GET",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-//     const data = await avatarRes.json();
+    const res = await signin(username, password);
+    const data = await res.json();
 
-//     expect(data.avatars.length).toBe(1);
-//     expect(data.avatars[0].userId).toBe(userId);
-//     avatarId = data.avatars[0].avatarId;
-//   });
+    token = data.token;
+    userId = data.userId;
 
-//   test("get all available avatar that user has created", async () => {
-//     const avatarRes = await fetch(`${backendUrl}/api/v1/avatars`, {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     const data = await avatarRes.json();
-//     expect(data.avatars.length).not.toBe(0);
-//     const currentAvatar = data.avatars.find((x) => x.avatarId === avatarId);
-//     expect(currentAvatar).toBeDefined();
-//   });
-// });
+    const userMetadataRes = await fetch(`${backendUrl}/api/v1/user/metadata`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        avatarId,
+      }),
+    });
+
+  });
+
+  test("get back avatar info for user", async () => {
+    const avatarRes = await fetch(
+      `${backendUrl}/api/v1/user/metadata/bulk?ids=[${userId}]`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await avatarRes.json();
+
+    expect(data.avatars.length).toBe(1);
+    expect(data.avatars[0].userId).toBe(userId);
+    avatarId = data.avatars[0].avatarId;
+  });
+
+  test("get all available avatar that user has created", async () => {
+    const avatarRes = await fetch(`${backendUrl}/api/v1/avatars`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await avatarRes.json();
+    console.log("data", data);
+    expect(data.avatars.length).not.toBe(0);
+    const currentAvatar = data.avatars.find((x) => x.id === avatarId);
+    expect(currentAvatar).toBeDefined();
+  });
+});
 
 // describe("Space Management", () => {
 //   let mapId;
@@ -485,7 +522,6 @@ describe("User Metadeta endpoint", () => {
 //     expect(data.spaces.length).not.toBe(0);
 //   });
 // });
-
 
 // describe("Arena endpoint", () => {
 //   let mapId;

@@ -36,7 +36,9 @@ user.post('/metadata', userMiddleware, async (req, res) => {
 
 user.get('/metadata/bulk', userMiddleware, async (req, res) => {
     const userIdsString = (req.query.ids ?? "[]") as string; // string of array of ids
+    // console.log("userIdsString", userIdsString);
     const userIds = (userIdsString).slice(1, userIdsString.length - 1).split(",");
+    // console.log("userIds", userIds);
 
     const users = await client.user.findMany({
         where: {
@@ -51,8 +53,9 @@ user.get('/metadata/bulk', userMiddleware, async (req, res) => {
 
     res.json({
         avatars: users.map(m => ({
-            userid: m.id,
-            avatarId: m.avatar?.imageUrl
+            userId: m.id,
+            avatarId: m.avatar?.id,
+            avatarUrl: m.avatar?.imageUrl
         }))
     })
 

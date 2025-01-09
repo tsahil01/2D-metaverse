@@ -70,7 +70,7 @@ auth.post('/signin', async (req, res) => {
             role: user.role
         }, JWT_SECRET);
 
-        res.status(200).json({ token });
+        res.status(200).json({ token, userId: user.id });
 
     } catch (e) {
         res.status(400).json({

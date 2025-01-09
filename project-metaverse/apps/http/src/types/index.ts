@@ -25,7 +25,7 @@ export const UserMetadataUpdateSchema = z.object({
 })
 
 export const CreateAvatarSchema = z.object({
-    imgageUrl: z.string(),
+    imageUrl: z.string(),
     name: z.string()
 
 })
