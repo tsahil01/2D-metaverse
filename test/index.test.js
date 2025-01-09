@@ -188,7 +188,7 @@ describe("User avatar information", () => {
       }),
     });
     const avatarResData = await avatarRes.json();
-    console.log("avatarResData", avatarResData);
+    // console.log("avatarResData", avatarResData);
     avatarId = avatarResData.avatarId;
 
     const username = "user" + Math.random();
@@ -211,7 +211,6 @@ describe("User avatar information", () => {
         avatarId,
       }),
     });
-
   });
 
   test("get back avatar info for user", async () => {
@@ -241,7 +240,6 @@ describe("User avatar information", () => {
       },
     });
     const data = await avatarRes.json();
-    console.log("data", data);
     expect(data.avatars.length).not.toBe(0);
     const currentAvatar = data.avatars.find((x) => x.id === avatarId);
     expect(currentAvatar).toBeDefined();
@@ -747,174 +745,160 @@ describe("User avatar information", () => {
 //   });
 // });
 
-// describe("Admin endpoints", () => {
-//   let adminId;
-//   let adminToken;
-//   let userId;
-//   let userToken;
+describe("Admin endpoints", () => {
+  let adminId;
+  let adminToken;
+  let userId;
+  let userToken;
 
-//   beforeAll(async () => {
-//     const adminUsername = "admin" + Math.random();
-//     const adminPassword = "password";
-//     const type = "admin";
+  beforeAll(async () => {
+    const adminUsername = "admin" + Math.random();
+    const adminPassword = "password";
+    const type = "admin";
 
-//     const adminSignup = await fetch(`${backendUrl}/api/v1/signup`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ adminUsername, adminPassword, type }),
-//     });
-//     const adminSignupData = await adminSignup.json();
-//     adminId = adminSignupData.userId;
+    const adminSignup = await singup(adminUsername, adminPassword, type);
+    const adminSignupData = await adminSignup.json();
+    adminId = adminSignupData.userId;
 
-//     const adminLogin = await fetch(`${backendUrl}/api/v1/signin`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ adminUsername, adminPassword }),
-//     });
-//     const adminLoginData = await adminLogin.json();
-//     adminToken = adminLoginData.token;
+    const adminLogin = await signin(adminUsername, adminPassword);
+    const adminLoginData = await adminLogin.json();
+    adminToken = adminLoginData.token;
 
-//     const username = "user" + Math.random();
-//     const password = "password";
+    const username = "user" + Math.random();
+    const password = "password";
 
-//     const userSignup = await fetch(`${backendUrl}/api/v1/signup`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ username, password, type: "user" }),
-//     });
-//     const userSignupData = await userSignup.json();
-//     userId = userSignupData.userId;
+    const userSignup = await singup(username, password, "user");
+    const userSignupData = await userSignup.json();
+    userId = userSignupData.userId;
 
-//     const userLogin = await fetch(`${backendUrl}/api/v1/signin`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ username, password }),
-//     });
-//     const userLoginData = await userLogin.json();
-//     userToken = userLoginData.token;
-//   });
+    const userLogin = await signin(username, password);
+    const userLoginData = await userLogin.json();
+    userToken = userLoginData.token;
+  });
 
-//   test("user cannot create elements", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/admin/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//         width: 1,
-//         height: 1,
-//         static: true,
-//       }),
-//     });
+  test("user cannot create elements", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/admin/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      }),
+    });
 
-//     expect(res.status).toBe(403);
-//   });
+    expect(res.status).toBe(403);
+  });
 
-//   test("only admin creates element", async () => {
-//     const elementsRes = await fetch(`${backendUrl}/api/v1/elements`, {
-//       method: "GET",
-//       headers: { Authorization: `Bearer ${adminToken}` },
-//     });
-//     const elementsData = await elementsRes.json();
-//     const initialElementCount = elementsData.elements.length;
+  test("only admin creates element", async () => {
+    const elementsRes = await fetch(`${backendUrl}/api/v1/elements`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    const elementsData = await elementsRes.json();
+    const initialElementCount = elementsData.elements.length;
 
-//     const res = await fetch(`${backendUrl}/api/v1/admin/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//         width: 1,
-//         height: 1,
-//         static: true,
-//       }),
-//     });
-//     const resData = await res.json();
+    const res = await fetch(`${backendUrl}/api/v1/admin/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      }),
+    });
 
-//     expect(res.status).toBe(201);
-//     expect(resData).toHaveProperty("id");
+    const resData = await res.json();
 
-//     const newCountRes = await fetch(`${backendUrl}/api/v1/elements`, {
-//       method: "GET",
-//       headers: { Authorization: `Bearer ${adminToken}` },
-//     });
-//     const newCountData = await newCountRes.json();
+    expect(res.status).toBe(200);
+    expect(resData).toHaveProperty("id");
 
-//     expect(newCountData.elements.length).toBe(initialElementCount + 1);
-//   });
+    const newCountRes = await fetch(`${backendUrl}/api/v1/elements`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    const newCountData = await newCountRes.json();
+    expect(newCountData.elements.length).toBe(initialElementCount + 1);
+  });
 
-//   test("user cannot update the elements imgUrl", async () => {
-//     const createEleRes = await fetch(`${backendUrl}/api/v1/admin/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//         width: 1,
-//         height: 1,
-//         static: true,
-//       }),
-//     });
-//     const createEleData = await createEleRes.json();
-//     const elementId = createEleData.id;
+  test("user cannot update the elements imgUrl", async () => {
+    const createEleRes = await fetch(`${backendUrl}/api/v1/admin/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      }),
+    });
+    const createEleData = await createEleRes.json();
+    const elementId = createEleData.id;
 
-//     const res = await fetch(`${backendUrl}/api/v1/admin/element/${elementId}`, {
-//       method: "PUT",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//       }),
-//     });
+    const res = await fetch(`${backendUrl}/api/v1/admin/element/${elementId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+      }),
+    });
 
-//     expect(res.status).toBe(400);
-//   });
+    expect(res.status).toBe(403);
+  });
 
-//   test("only admin updates the elements imgUrl", async () => {
-//     const createEleRes = await fetch(`${backendUrl}/api/v1/admin/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//         width: 1,
-//         height: 1,
-//         static: true,
-//       }),
-//     });
-//     const createEleData = await createEleRes.json();
-//     const elementId = createEleData.id;
+  test("only admin updates the elements imgUrl", async () => {
+    const createEleRes = await fetch(`${backendUrl}/api/v1/admin/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      }),
+    });
+    const createEleData = await createEleRes.json();
+    const elementId = createEleData.id;
 
-//     const res = await fetch(`${backendUrl}/api/v1/admin/element/${elementId}`, {
-//       method: "PUT",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//       }),
-//     });
+    const res = await fetch(`${backendUrl}/api/v1/admin/element/${elementId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+      }),
+    });
 
-//     expect(res.status).toBe(200);
-//   });
-// });
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+  });
+});
 
 // describe("Websocket tests", () => {
 //   let adminToken;

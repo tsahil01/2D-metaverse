@@ -11,8 +11,11 @@ router.use('/admin', admin);
 router.use('/space', space);
 router.use('/user', user);
 
-router.get("/elements", (req, res) => {
-    
+router.get("/elements", async (req, res) => {
+    const elements = await client.element.findMany();
+    res.json({
+        elements
+    })
 })
 
 router.get("/avatars", async (req, res) => {

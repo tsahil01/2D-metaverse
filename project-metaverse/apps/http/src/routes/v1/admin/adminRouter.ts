@@ -1,5 +1,5 @@
 import express from "express"
-import { CreateAvatarSchema, CreateElementSchema, CreateMapSchema } from "../../../types";
+import { CreateAvatarSchema, CreateElementSchema, CreateMapSchema, UpdateElementSchema } from "../../../types";
 import client from "@repo/db/client";
 import { adminMiddleware } from "../../../middleware/admin-middleware";
 
@@ -49,7 +49,7 @@ admin.post(`/element`, adminMiddleware, async (req, res) => {
 
 admin.put(`/element/:id`, adminMiddleware, async (req, res) => {
     const data = req.body;
-    const parseData = CreateElementSchema.safeParse(data);
+    const parseData = UpdateElementSchema.safeParse(data);
     if (!parseData.success) {
         res.status(400).json({ msg: "Invalid Data send" });
         return;
