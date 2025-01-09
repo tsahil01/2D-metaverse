@@ -23,3 +23,9 @@ export const SigninSchema = z.object({
 export const UserMetadataUpdateSchema = z.object({
     avatarId: z.string()
 })
+
+export const CreateAvatarSchema = z.object({
+    imgageUrl: z.string(),
+    name: z.string()
+
+})

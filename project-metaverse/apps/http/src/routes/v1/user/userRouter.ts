@@ -13,18 +13,24 @@ user.post('/metadata', userMiddleware, async (req, res) => {
         })
         return;
     }
-    await client.user.update({
-        where: {
-            id: req.userId
-        },
-        data: {
-            avatarId: parseData.data?.avatarId
-        }
-    })
+    try {
+        await client.user.update({
+            where: {
+                id: req.userId
+            },
+            data: {
+                avatarId: parseData.data?.avatarId
+            }
+        })
 
-    res.status(200).json({
-        msg: "User Metadata Updated",
-    })
+        res.status(200).json({
+            msg: "User Metadata Updated",
+        })
+    } catch (e) {
+        res.status(400).json({
+            msg: "Error"
+        })
+    }
 
 });
 
