@@ -1,5 +1,3 @@
-const axios = require("axios");
-
 const backendUrl = "http://localhost:3000";
 const wsServerUrl = "ws://localhost:3001";
 
@@ -488,7 +486,6 @@ describe("Space Management", () => {
   });
 });
 
-// // change to fetch in below tests
 
 describe("Arena endpoint", () => {
   let mapId;
