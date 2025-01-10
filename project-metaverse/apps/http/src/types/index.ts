@@ -62,3 +62,37 @@ export const CreateSpaceSchema = z.object({
 export const DeleteSpaceSchema = z.object({
     spaceId: z.string()
 });
+
+export const GetSpaceSchema = z.object({
+    spaceId: z.string()
+})
+
+export const ReturnSpaceSchema = z.object({
+    dimensions: z.string().regex(/^\d+x\d+$/),
+    elements: z.array(z.object({
+        id: z.string(),
+        element: z.object({
+            id: z.string(),
+            imageUrl: z.string(),
+            static: z.boolean(),
+            height: z.number(),
+            width: z.number()
+        }),
+        x: z.number(),
+        y: z.number()
+    }))
+})
+
+
+export const AddElementToSpaceSchema = z.object({
+    elementId: z.string(),
+    spaceId: z.string(),
+    x: z.number(),
+    y: z.number()
+})
+
+export const DeleteElementFromSpaceSchema = z.object({
+    id: z.string(),
+    elementId: z.string(),
+    spaceId: z.string()
+})

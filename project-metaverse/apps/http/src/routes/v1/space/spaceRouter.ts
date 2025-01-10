@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express"
 import { userMiddleware } from "../../../middleware/user-middleware";
 import client from "@repo/db/client"
-import { CreateMapSchema, CreateSpaceSchema } from "../../../types";
+import { AddElementToSpaceSchema, CreateSpaceSchema, DeleteElementFromSpaceSchema, GetSpaceSchema } from "../../../types";
 
 const space = express.Router();
 
@@ -22,6 +22,7 @@ space.post("/", userMiddleware, async (req: Request, res: Response) => {
                 creatorId: req.userId!
             }
         });
+
         res.json({ spaceId: newSpace.id })
         return;
     }
@@ -119,6 +120,152 @@ space.get("/all", userMiddleware, async (req, res) => {
     return res.json({
         spaces
     })
-})
+});
+
+space.get("/:spaceId", userMiddleware, async (req, res) => {
+    const parseData = GetSpaceSchema.safeParse(req.params);
+    if (!parseData.success) {
+        return res.status(400).json({
+            msg: "Invalid Data send"
+        })
+    }
+
+    const space = await client.space.findUnique({
+        where: {
+            id: parseData.data.spaceId
+        }, include: {
+            spaceElements: {
+                include: {
+                    element: true
+                }
+            }
+        }
+    });
+
+    if (!space) {
+        return res.status(400).json({
+            message: "Space not found"
+        })
+    }
+
+    const elements = space.spaceElements.map(e => {
+        return {
+            id: e.id,
+            elements: {
+                id: e.element.id,
+                imageUrl: e.element.imageUrl,
+                static: e.element.static,
+                height: e.element.height,
+                width: e.element.width
+            },
+            x: e.x,
+            y: e.y
+        }
+    })
+
+    return res.status(200).json({
+        dimensions: `${space.width}x${space.height}`,
+        elements
+    })
+
+});
+
+space.post("/element", userMiddleware, async (req, res) => {
+    const parseData = AddElementToSpaceSchema.safeParse(req.body);
+    if (!parseData.success) {
+        return res.status(400).json({
+            msg: "Invalid Data send"
+        })
+    }
+
+    const space = await client.space.findUnique({
+        where: {
+            id: parseData.data.spaceId,
+            creatorId: req.userId
+        }
+    });
+
+    if (!space) {
+        return res.status(400).json({
+            message: "Space not found with the given id or creator"
+        })
+    }
+
+    if (parseData.data.x > space.width || parseData.data.y > space.height) {
+        return res.status(400).json({
+            message: "Invalid x or y"
+        })
+    }
+
+    const element = await client.element.findUnique({
+        where: {
+            id: parseData.data.elementId
+        }
+    });
+
+    if (!element) {
+        return res.status(400).json({
+            message: "Element not found"
+        })
+    }
+
+    await client.spaceElements.create({
+        data: {
+            elementId: parseData.data.elementId,
+            spaceId: parseData.data.spaceId,
+            x: parseData.data.x,
+            y: parseData.data.y
+        }
+    });
+
+    return res.status(200).json({
+        message: "Element added to space"
+    })
+
+});
+
+space.delete("/element", userMiddleware, async (req, res) => {
+    const parseData = DeleteElementFromSpaceSchema.safeParse(req.body);
+    if (!parseData.success) {
+        return res.status(400).json({
+            msg: "Invalid Data send"
+        })
+    }
+
+    const space = await client.space.findUnique({
+        where: {
+            id: parseData.data.spaceId,
+            creatorId: req.userId
+        }
+    });
+
+    if (!space) {
+        return res.status(400).json({
+            message: "Space not found with the given id or creator"
+        })
+    }
+
+    const element = await client.element.findUnique({
+        where: {
+            id: parseData.data.elementId
+        }
+    })
+
+    if (!element) {
+        return res.status(400).json({
+            message: "Element not found"
+        })
+    };
+
+    await client.spaceElements.delete({
+        where: {
+            id: parseData.data.id
+        }
+    });
+
+    return res.status(200).json({
+        message: "Element deleted from space"
+    })
+});
 
 export default space;
