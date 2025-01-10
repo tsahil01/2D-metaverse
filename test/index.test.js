@@ -61,7 +61,6 @@ describe("Authentication", () => {
     const res = await signin(username, password);
 
     const data = await res.json();
-    // await console.log("data", data);
 
     expect(res.status).toBe(200);
     expect(data).toHaveProperty("token");
@@ -188,7 +187,6 @@ describe("User avatar information", () => {
       }),
     });
     const avatarResData = await avatarRes.json();
-    // console.log("avatarResData", avatarResData);
     avatarId = avatarResData.avatarId;
 
     const username = "user" + Math.random();
@@ -348,13 +346,12 @@ describe("Space Management", () => {
       body: JSON.stringify({ name, dimension, mapId }),
     });
     const data = await res.json();
-    // console.log("data", data);
 
     expect(res.status).toBe(201);
     expect(data).toHaveProperty("spaceId");
   });
 
-test("user should create space without mapId (empty space)", async () => {
+  test("user should create space without mapId (empty space)", async () => {
     const name = "space" + Math.random();
     const dimension = "100x100";
 
@@ -499,229 +496,244 @@ test("user should create space without mapId (empty space)", async () => {
   });
 });
 
-// describe("Arena endpoint", () => {
-//   let mapId;
-//   let element1Id;
-//   let element2Id;
-//   let adminId;
-//   let adminToken;
-//   let userId;
-//   let userToken;
-//   let spaceId;
+describe("Arena endpoint", () => {
+  let mapId;
+  let element1Id;
+  let element2Id;
+  let adminId;
+  let adminToken;
+  let userId;
+  let userToken;
+  let spaceId;
+  let spaceElementId;
 
-//   beforeAll(async () => {
-//     const adminUsername = "user" + Math.random();
-//     const adminPassword = "password";
-//     const type = "admin";
+  beforeAll(async () => {
+    const adminUsername = "user" + Math.random();
+    const adminPassword = "password";
+    const type = "admin";
 
-//     const signup = await fetch(`${backendUrl}/api/v1/signup`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ adminUsername, adminPassword, type: "admin" }),
-//     }).then((res) => res.json());
-//     adminId = signup.userId;
+    await singup(adminUsername, adminPassword, type);
 
-//     const res = await fetch(`${backendUrl}/api/v1/signin`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ adminUsername, adminPassword }),
-//     }).then((res) => res.json());
-//     adminToken = res.token;
+    const res = await signin(adminUsername, adminPassword);
+    const data = await res.json();
+    adminToken = data.token;
 
-//     // create element
-//     const element1Res = await fetch(`${backendUrl}/api/v1/admin/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//         width: 1,
-//         height: 1,
-//         static: true,
-//       }),
-//     }).then((res) => res.json());
-//     element1Id = element1Res.id;
+    // create element
+    const element1Res = await fetch(`${backendUrl}/api/v1/admin/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      }),
+    }).then((res) => res.json());
+    element1Id = element1Res.id;
 
-//     const element2Res = await fetch(`${backendUrl}/api/v1/admin/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         imageUrl:
-//           "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
-//         width: 1,
-//         height: 1,
-//         static: true,
-//       }),
-//     }).then((res) => res.json());
-//     element2Id = element2Res.id;
+    const element2Res = await fetch(`${backendUrl}/api/v1/admin/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE",
+        width: 1,
+        height: 1,
+        static: true,
+      }),
+    }).then((res) => res.json());
+    element2Id = element2Res.id;
 
-//     // create map
-//     const createMapRes = await fetch(`${backendUrl}/api/v1/admin/map`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${adminToken}`,
-//       },
-//       body: JSON.stringify({
-//         thumbnail: "https://thumbnail.com/a.png",
-//         dimension: "100x200",
-//         name: "new map" + Math.random(),
-//         defaultElements: [
-//           {
-//             elementId: element1Id,
-//             x: 20,
-//             y: 20,
-//           },
-//           {
-//             elementId: element2Id,
-//             x: 18,
-//             y: 20,
-//           },
-//         ],
-//       }),
-//     }).then((res) => res.json());
-//     mapId = createMapRes.mapId;
+    // create map
+    const createMapRes = await fetch(`${backendUrl}/api/v1/admin/map`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        thumbnail: "https://thumbnail.com/a.png",
+        dimension: "100x200",
+        name: "new map" + Math.random(),
+        defaultElements: [
+          {
+            elementId: element1Id,
+            x: 20,
+            y: 20,
+          },
+          {
+            elementId: element2Id,
+            x: 18,
+            y: 20,
+          },
+        ],
+      }),
+    }).then((res) => res.json());
+    mapId = createMapRes.id;
 
-//     // create user
-//     const username = "user" + Math.random();
-//     const userpassword = "password";
+    // create user
+    const username = "user" + Math.random();
+    const userpassword = "password";
 
-//     const userSignup = await fetch(`${backendUrl}/api/v1/signup`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ username, password: userpassword, type: "user" }),
-//     }).then((res) => res.json());
-//     userId = userSignup.userId;
+    const userSignup = await singup(username, userpassword, "user");
 
-//     const userRes = await fetch(`${backendUrl}/api/v1/signin`, {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ username, password: userpassword }),
-//     }).then((res) => res.json());
-//     userToken = userRes.token;
+    const userRes = await signin(username, userpassword);
+    const userData = await userRes.json();
+    userToken = userData.token;
 
-//     const name = "space" + Math.random();
-//     const dimension = "100x100";
+    const name = "space" + Math.random();
+    const dimension = "100x100";
 
-//     const createSpace = await fetch(`${backendUrl}/api/v1/space`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         name,
-//         dimension,
-//         mapId,
-//       }),
-//     }).then((res) => res.json());
-//     spaceId = createSpace.spaceId;
-//   });
+    const createSpace = await fetch(`${backendUrl}/api/v1/space`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        name,
+        dimension,
+        mapId,
+      }),
+    }).then((res) => res.json());
+    spaceId = createSpace.spaceId;
 
-//   test("sending wrong spaceid for the user", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/space/wrongSpaceId`, {
-//       headers: { Authorization: `Bearer ${userToken}` },
-//     });
-//     expect(res.status).toBe(400);
-//   });
+    const addElement = await fetch(`${backendUrl}/api/v1/space/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        elementId: element1Id,
+        spaceId,
+        x: 10,
+        y: 10,
+      }),
+    }).then((res) => res.json());
 
-//   test("get space of the user for arena", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
-//       headers: { Authorization: `Bearer ${userToken}` },
-//     }).then((res) => res.json());
-//     expect(res.status).toBe(200);
-//     expect(res).toHaveProperty("dimension");
-//     expect(res).toHaveProperty("elements");
-//     expect(res.elements).length.toBe(2);
-//   });
+    spaceElementId = addElement.id;
+  });
 
-//   test("add element to the space", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/space/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         elementId: element1Id,
-//         spaceId,
-//         x: 11,
-//         y: 13,
-//       }),
-//     });
+  test("sending wrong spaceid for the user", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/space/wrongSpaceId`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+    const data = await res.json();
+    expect(res.status).toBe(400);
+  });
 
-//     const newRes = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
-//       headers: { Authorization: `Bearer ${userToken}` },
-//     }).then((res) => res.json());
+  test("get space of the user for arena", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
 
-//     expect(res.status).toBe(200);
-//     expect(newRes.elements).length.toBe(3);
-//   });
+    const data = await res.json();
 
-//   test("add element fails for non existing x and y", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/space/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         elementId: element1Id,
-//         spaceId,
-//         x: 11000,
-//         y: 1300000,
-//       }),
-//     });
-//     expect(res.status).toBe(400);
-//   });
+    expect(res.status).toBe(200);
+    expect(data).toHaveProperty("dimensions");
+    expect(data).toHaveProperty("elements");
+    expect(data.elements.length).toBe(3);
+  });
 
-//   test("cannot add element to the space if error element id", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/space/${spaceId}/element`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         elementId: "wrongElementId",
-//         x: 10,
-//         y: 10,
-//       }),
-//     });
-//     expect(res.status).toBe(400);
-//   });
+  test("add element to the space", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/space/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        elementId: element1Id,
+        spaceId,
+        x: 11,
+        y: 13,
+      }),
+    });
 
-//   test("delete the element from the arena", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/space/element`, {
-//       method: "DELETE",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${userToken}`,
-//       },
-//       body: JSON.stringify({
-//         spaceId,
-//         element1Id,
-//       }),
-//     }).then((res) => res.json());
+    const data = await res.json();
+    console.log("data", data);
+    spaceElementId = data.id;
 
-//     expect(res.status).toBe(200);
-//     expect(res.elements).length.toBe(2);
-//   });
+    const newRes = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    }).then((res) => res.json());
 
-//   test("see all available elements", async () => {
-//     const res = await fetch(`${backendUrl}/api/v1/elements`, {
-//       headers: { Authorization: `Bearer ${userToken}` },
-//     }).then((res) => res.json());
-//     expect(res.status).toBe(200);
-//     expect(res.elements.length).not.toBe(0);
-//   });
-// });
+    expect(res.status).toBe(200);
+    expect(newRes.elements.length).toBe(4);
+  });
+
+  test("add element fails for non existing x and y", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/space/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        elementId: element1Id,
+        spaceId,
+        x: 11000,
+        y: 1300000,
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test("cannot add element to the space if error elementId", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/space/element`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        elementId: "wrongElementId",
+        x: 10,
+        y: 10,
+      }),
+    });
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+  });
+
+  test("delete the element from the arena", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/space/element/${spaceElementId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
+
+    const data = await res.json();
+
+    const newRes = await fetch(`${backendUrl}/api/v1/space/${spaceId}`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    })
+    const newData = await newRes.json();
+
+    expect(res.status).toBe(200);
+    expect(newData.elements.length).toBe(3);
+  });
+
+  test("see all available elements", async () => {
+    const res = await fetch(`${backendUrl}/api/v1/elements`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    })
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.elements.length).not.toBe(0);
+  });
+});
 
 describe("Admin endpoints", () => {
   let adminId;

@@ -209,7 +209,7 @@ space.post("/element", userMiddleware, async (req, res) => {
         })
     }
 
-    await client.spaceElements.create({
+    const newSpaceElelent = await client.spaceElements.create({
         data: {
             elementId: parseData.data.elementId,
             spaceId: parseData.data.spaceId,
@@ -219,43 +219,39 @@ space.post("/element", userMiddleware, async (req, res) => {
     });
 
     return res.status(200).json({
-        message: "Element added to space"
+        message: "Element added to space",
+        id: newSpaceElelent.id
     })
 
 });
 
-space.delete("/element", userMiddleware, async (req, res) => {
-    const parseData = DeleteElementFromSpaceSchema.safeParse(req.body);
+space.delete("/element/:id", userMiddleware, async (req, res) => {
+    const parseData = DeleteElementFromSpaceSchema.safeParse(req.params);
     if (!parseData.success) {
         return res.status(400).json({
             msg: "Invalid Data send"
         })
     }
 
-    const space = await client.space.findUnique({
+    const spaceElement = await client.spaceElements.findUnique({
         where: {
-            id: parseData.data.spaceId,
-            creatorId: req.userId
+            id: parseData.data.id
+        }, include: {
+            space: true
         }
     });
 
-    if (!space) {
+    if (!spaceElement) {
         return res.status(400).json({
-            message: "Space not found with the given id or creator"
+            message: "Space element not found"
         })
     }
 
-    const element = await client.element.findUnique({
-        where: {
-            id: parseData.data.elementId
-        }
-    })
-
-    if (!element) {
-        return res.status(400).json({
-            message: "Element not found"
+    if (spaceElement.space.creatorId !== req.userId) {
+        return res.status(403).json({
+            message: "Unauthorized"
         })
-    };
+    }
 
     await client.spaceElements.delete({
         where: {
