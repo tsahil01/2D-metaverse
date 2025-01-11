@@ -16,11 +16,12 @@ export class RoomManager {
     }
 
     public addUserToRoom(user: User, spaceId: string) {
+        console.log("Adding user to room", user.id, spaceId);
         if (!this.rooms.has(spaceId)) {
-            this.rooms.set(spaceId, []);
+            this.rooms.set(spaceId, [user]);
             return;
         }
-        this.rooms.set(spaceId, [...this.rooms.get(spaceId) ?? [], user]);
+        this.rooms.set(spaceId, [...(this.rooms.get(spaceId) ?? []), user]);
     };
 
     public removeUserFromRoom(user: User, spaceId: string) {

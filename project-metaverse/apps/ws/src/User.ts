@@ -18,17 +18,18 @@ export class User {
     public y: number;
 
 
-    constructor(private wss: WebSocket) {
+    constructor(ws: WebSocket) {
         this.id = getRandomId();
         this.x = 0;
         this.y = 0;
-        this.ws = wss;
+        this.ws = ws;
         this.initHandlers();
     }
 
     initHandlers() {
-        this.ws.on('message', (data) => {
-            const parseData = JSON.parse(data.toString());
+        this.ws.on('message', async (data) => {
+            const parseData = await JSON.parse(data.toString());
+            console.log("PARSED DATA", parseData)
 
             switch (parseData.type) {
                 case 'join': {
@@ -41,7 +42,7 @@ export class User {
                     };
                     this.userId = userId;
 
-                    const space = client.space.findFirst({
+                    const space = await client.space.findFirst({
                         where: {
                             id: spaceId
                         }
@@ -74,9 +75,8 @@ export class User {
                             userId: this.userId,
                             x: this.x,
                             y: this.y
-                        },
+                        }
                     }, this, this.spaceId!);
-
                     break;
                 }
                 case 'movement': {
@@ -95,17 +95,19 @@ export class User {
                             payload: {
                                 x: this.x,
                                 y: this.y,
+                                userId: this.userId
                             },
                         }, this, this.spaceId!)
                         return;
                     };
                     this.send({
-                        type: "movement-regected",
+                        type: "movement-rejected",
                         payload: {
                             x: this.x,
                             y: this.y
                         }
                     })
+                    break;
                 }
             }
         })
