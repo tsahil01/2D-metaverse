@@ -99,6 +99,21 @@ admin.post(`/map`, adminMiddleware, async (req, res) => {
     res.json({
         id: newMap.id
     })
-})
+});
+
+
+admin.get(`/map`, adminMiddleware, async (req, res) => {
+    const maps = await client.map.findMany({
+        include: {
+            mapElements: {
+                include: {
+                    element: true
+                }
+            }
+        }
+    });
+
+    res.json(maps);
+});
 
 export default admin;
