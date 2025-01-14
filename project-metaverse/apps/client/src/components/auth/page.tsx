@@ -10,31 +10,24 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { BACKEND_URL } from "@/lib/config"
+import { LockKeyhole } from "lucide-react"
 
 export function AuthPage({ signup }: { signup?: boolean }) {
     const [username, setUsername] = React.useState("");
     const [password, setPassword] = React.useState("");
-    const [userType, setUserType] = React.useState<'admin' | 'user'>("user");
     const [loading, setLoading] = React.useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         if (signup) {
-            if (username && password && userType) {
+            if (username && password) {
                 const signupData = await fetch(`${BACKEND_URL}/signup`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ username, password, type: userType })
+                    body: JSON.stringify({ username, password, type: 'admin' })
                 });
 
                 if (signupData.status == 200) {
@@ -68,7 +61,18 @@ export function AuthPage({ signup }: { signup?: boolean }) {
 
     return (
         <div className="flex items-center justify-center h-screen">
-            <div className="flex items-center justify-center">
+            <div className="flex flex-col  space-y-4 items-center justify-center">
+                <div className="text-center">
+                    <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                        <LockKeyhole className="h-6 w-6 text-primary" />
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                        User Portal
+                    </h1>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        {signup ? "Create your admin account" : "Sign in to your account"}
+                    </p>
+                </div>
 
                 <Card className="w-[350px]">
                     <CardHeader>
@@ -89,20 +93,6 @@ export function AuthPage({ signup }: { signup?: boolean }) {
                                     <Label htmlFor="password">Password</Label>
                                     <Input id="password" required={true} type="password" placeholder="Enter your Password" onChange={(e) => setPassword(e.target.value)} />
                                 </div>
-                                {signup && (
-                                    <div className="flex flex-col space-y-1.5">
-                                        <Label htmlFor="usertype">User Type</Label>
-                                        <Select required={true}>
-                                            <SelectTrigger>
-                                                <SelectValue>{'user'}</SelectValue>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="User" onClick={() => setUserType("user")}>User</SelectItem>
-                                                <SelectItem value="Admin" onClick={() => setUserType("admin")}>Admin</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
                             </div>
                         </form>
                     </CardContent>

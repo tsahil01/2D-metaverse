@@ -1,17 +1,9 @@
-import { Button } from "../ui/button";
+import { Navbar } from "../nav/navbar";
 
 export function Dashboard() {
     return <>
-        Hello there
-        <br />
-        <br />
-        {
-            // localStorage.getItem("token")
-           localStorage
-        }
-        <Button onClick={() => {
-            localStorage.removeItem("token")
-            window.location.reload()
-        }}>Logout</Button>
+        <main className="flex flex-col h-screen container p-5 mx-auto">
+            <Navbar />
+        </main>
     </>
 }

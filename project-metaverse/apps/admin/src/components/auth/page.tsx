@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { BACKEND_URL } from "@/lib/config"
+import { LockKeyhole } from "lucide-react"
 
 export function AuthPage({ signup }: { signup?: boolean }) {
     const [username, setUsername] = React.useState("");
@@ -60,7 +61,18 @@ export function AuthPage({ signup }: { signup?: boolean }) {
 
     return (
         <div className="flex items-center justify-center h-screen">
-            <div className="flex items-center justify-center">
+            <div className="flex flex-col  space-y-4 items-center justify-center">
+                <div className="text-center">
+                    <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                        <LockKeyhole className="h-6 w-6 text-primary" />
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                        Admin Portal
+                    </h1>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        {signup ? "Create your admin account" : "Sign in to your account"}
+                    </p>
+                </div>
 
                 <Card className="w-[350px]">
                     <CardHeader>
