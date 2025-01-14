@@ -2,6 +2,7 @@ import { ElementInterface, ElementWithPositionInterface } from "@/lib/types";
 import { useEffect, useState, useCallback } from "react";
 import Phaser from "phaser";
 import { BACKEND_URL } from "@/lib/config";
+import { Button } from "../ui/button";
 
 interface MapEditorProps {
   name: string;
@@ -24,6 +25,34 @@ export function MapEditor({ name, thumbnail, dimension }: MapEditorProps) {
       console.error("Failed to fetch elements:", error);
     }
   };
+
+  async function createMap() {
+    try {
+      const response = await fetch(`${BACKEND_URL}/admin/map`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          name,
+          thumbnail,
+          dimension,
+          defaultElements: elements.map((element) => ({
+            elementId: element.id,
+            x: element.x,
+            y: element.y,
+          })),
+        }),
+      });
+      const data = await response.json();
+      console.log(data);
+      alert("Map created successfully");
+    } catch (error) {
+      console.error("Failed to create map:", error);
+      alert("Failed to create map");
+    }
+  }
 
   useEffect(() => {
     fetchElements();
@@ -192,19 +221,27 @@ export function MapEditor({ name, thumbnail, dimension }: MapEditorProps) {
   }, [isEditMode, elements, availableElements]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 mt-8 border-t pt-4">
       <div className="space-x-4">
-        <button
+        <Button
           className={`px-4 py-2 rounded ${isEditMode ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
             } text-white transition-colors`}
           onClick={() => setIsEditMode(!isEditMode)}
         >
           {isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
-        </button>
+        </Button>
+        {!isEditMode && (elements.length != 0) && (
+          <Button
+            className="px-4 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+            onClick={createMap}
+          >
+            Save Map
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <div id="phaser-game" className="p-3 col-span-3 bg-primary/5 rounded-lg" />
+        <div id="phaser-game" className="p-3 col-span-3 bg-primary/5 rounded-lg overflow-scroll" />
 
         {isEditMode && (
           <div className="w-64 bg-primary/5 p-4 overflow-y-auto col-span-1 rounded-lg">

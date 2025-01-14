@@ -4,6 +4,8 @@ import { Dashboard } from "./components/dashboard/dashboard"
 import { Redirect } from "./components/redirect"
 import { Navbar } from "./components/nav/navbar"
 import { CreateMap } from "./components/create-map/create-map"
+import { CreateElement } from "./components/add-element/add-element"
+import { CreateAvatar } from "./components/add-avatar/add-avatar"
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
           <Route path="/login" element={<AuthPage signup={false} />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-map" element={<CreateMap />} />
+          <Route path="/create-element" element={<CreateElement />} />
+          <Route path="/create-avatar" element={<CreateAvatar />} />
         </Routes>
       </BrowserRouter>
     </main>

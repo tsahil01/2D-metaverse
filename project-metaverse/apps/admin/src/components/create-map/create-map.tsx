@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "../ui/button";
 import { MapEditor } from "./mapEditor";
 
 export function CreateMap() {
@@ -37,13 +36,6 @@ export function CreateMap() {
                                 (e) => setDimension(e.target.value)
                             } />
                         </div>
-
-                        <div className="flex">
-                            <Button variant={"outline"} disabled={
-                                !name || !thumbnail || !dimension
-
-                            }>Open Map Editor</Button>
-                        </div>
                     </div>
                     {
                         !name || !thumbnail || !dimension ? (
@@ -52,8 +44,8 @@ export function CreateMap() {
                     }
 
                     {
-                         <MapEditor name={name} thumbnail={thumbnail} dimension={dimension} />
-                            
+                        name && thumbnail && dimension ? <MapEditor name={name} thumbnail={thumbnail} dimension={dimension} />
+                            : null
                     }
 
                 </CardContent>

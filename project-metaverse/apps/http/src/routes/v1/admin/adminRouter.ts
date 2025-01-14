@@ -37,7 +37,8 @@ admin.post(`/element`, adminMiddleware, async (req, res) => {
             imageUrl: parseData.data.imageUrl,
             width: parseData.data.width,
             height: parseData.data.height,
-            static: parseData.data.static
+            static: parseData.data.static,
+            name: parseData.data.name || "no-name"
         }
     });
 
