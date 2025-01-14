@@ -25,7 +25,7 @@ export function ElementCard({ id, width, height, imageUrl, name, static: isStati
     return (
         <Card key={id}>
             <CardHeader>
-                <img src={imageUrl ||
+                <img className="w-full h-32 object-contain mb-2" src={imageUrl ||
                     "https://via.placeholder.com/150"} alt={id} />
             </CardHeader>
             <CardContent>
@@ -46,7 +46,7 @@ export function AvatarCard({ id, name, imageUrl }: AvatarInterface) {
     return (
         <Card key={id}>
             <CardHeader>
-                <img src={imageUrl || "https://via.placeholder.com/150"} alt={name} />
+                <img className="w-full h-32 object-contain mb-2" src={imageUrl || "https://via.placeholder.com/150"} alt={name} />
             </CardHeader>
             <CardContent>
                 <CardTitle>{name}</CardTitle>

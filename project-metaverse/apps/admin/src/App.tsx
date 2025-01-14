@@ -9,7 +9,7 @@ import { CreateAvatar } from "./components/add-avatar/add-avatar"
 
 function App() {
   return (
-    <main className="flex flex-col gap-10 h-screen container p-5 mx-auto">
+    <main className="flex flex-col gap-10 h-screen p-5 max-w-screen-2xl mx-auto">
       <Navbar />
       <BrowserRouter>
         <Routes>
