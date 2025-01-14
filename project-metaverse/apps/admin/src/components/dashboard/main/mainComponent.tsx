@@ -62,7 +62,7 @@ export function MainComponent() {
     return (
         <>
             <Card>
-                <CardHeader className="border-b">
+                <CardHeader className="border-b bg-primary/5">
                     <CardTitle>Dashboard</CardTitle>
                     <CardDescription>This is the admin dashboard for the Metaverse project. You can manage users, view statistics, and more.</CardDescription>
                 </CardHeader>
@@ -77,39 +77,39 @@ export function MainComponent() {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             <Card className="col-span-1 lg:col-span-2">
-                                <CardHeader>
+                            <CardHeader className="bg-primary/5">
                                     <CardTitle>Maps</CardTitle>
                                     <CardDescription>
                                         Maps are the virtual worlds that users can explore and interact with.
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     {maps.map((map) => (
                                         <MapCard key={map.id} {...map} />
                                     ))}
                                 </CardContent>
                             </Card>
                             <Card className="col-span-1">
-                                <CardHeader>
+                                <CardHeader className="bg-primary/5">
                                     <CardTitle>Elements</CardTitle>
                                     <CardDescription>
                                         Elements are the building blocks of maps.
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <CardContent className="grid grid-cols-1 gap-4 mt-4">
                                     {elements.map((element) => (
                                         <ElementCard key={element.id} {...element} />
                                     ))}
                                 </CardContent>
                             </Card>
                             <Card className="col-span-1">
-                                <CardHeader>
+                            <CardHeader className="bg-primary/5">
                                     <CardTitle>Avatars</CardTitle>
                                     <CardDescription>
                                         Avatars are the virtual representations of users.
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="grid grid-cols-1 gap-4">
+                                <CardContent className="grid grid-cols-1 gap-4 mt-4">
                                     {avatars.map((avatar) => (
                                         <AvatarCard key={avatar.id} {...avatar} />
                                     ))}

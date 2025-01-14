@@ -12,8 +12,9 @@ export function MapCard({ id, name, thumbnail, height, width, mapElements }: Map
                 <CardTitle>{name}</CardTitle>
                 <CardDescription>{height}x{width}</CardDescription>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-between">
                 <Button variant={'outline'}>View</Button>
+                <Button variant={'outline'}>Delete</Button>
             </CardFooter>
         </Card>
     )
@@ -33,8 +34,9 @@ export function ElementCard({ id, width, height, imageUrl, name, static: isStati
                     {width}x{height} {isStatic ? "Static" : "Dynamic"}
                 </CardDescription>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-between">
                 <Button variant={'outline'}>View</Button>
+                <Button variant={'outline'}>Delete</Button>
             </CardFooter>
         </Card>
     )
@@ -50,8 +52,9 @@ export function AvatarCard({ id, name, imageUrl }: AvatarInterface) {
                 <CardTitle>{name}</CardTitle>
                 <CardDescription>{id}</CardDescription>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-between">
                 <Button variant={'outline'}>View</Button>
+                <Button variant={'outline'}>Delete</Button>
             </CardFooter>
         </Card>
     )
