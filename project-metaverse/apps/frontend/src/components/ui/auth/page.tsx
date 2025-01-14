@@ -17,6 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { BACKEND_URL } from "@/lib/config"
 
 export function AuthPage({ signup }: { signup?: boolean }) {
     const [username, setUsername] = React.useState("");
@@ -24,12 +25,44 @@ export function AuthPage({ signup }: { signup?: boolean }) {
     const [userType, setUserType] = React.useState<'admin' | 'user'>("user");
     const [loading, setLoading] = React.useState(false);
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         if (signup) {
-            console.log("Signup", { username, password, userType })
+            if (username && password && userType) {
+                const signupData = await fetch(`${BACKEND_URL}/signup`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ username, password, type: userType })
+                });
+
+                if (signupData.status == 200) {
+                    alert("Signup Successful")
+                }
+            }
         } else {
-            console.log("Login", { username, password })
+            if (username && password) {
+                const loginData = await await fetch(`${BACKEND_URL}/signin`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                    }),
+                });
+
+                const data = await loginData.json();
+                console.log(data)
+                if (data.token) {
+                    localStorage.setItem("token", data.token);
+                    window.location.href = "/";
+                }
+
+
+            }
         }
     }
 
