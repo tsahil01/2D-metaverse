@@ -34,7 +34,8 @@ export const CreateElementSchema = z.object({
     imageUrl: z.string(),
     width: z.number(),
     height: z.number(),
-    static: z.boolean()
+    static: z.boolean(),
+    name: z.string().optional()
 });
 
 export const UpdateElementSchema = z.object({
