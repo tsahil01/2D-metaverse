@@ -4,11 +4,13 @@ import { BACKEND_URL } from "@/lib/config";
 import { MapInterface, ElementInterface, AvatarInterface } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { AvatarCard, ElementCard, MapCard } from "./getDataInCard";
+import { useNavigate } from "react-router-dom";
 
 export function MainComponent() {
     const [maps, setMaps] = useState<MapInterface[]>([]);
     const [elements, setElements] = useState<ElementInterface[]>([]);
     const [avatars, setAvatars] = useState<AvatarInterface[]>([]);
+    const navigate = useNavigate();
 
     async function getMaps() {
         const token = localStorage.getItem("token");
@@ -70,14 +72,26 @@ export function MainComponent() {
                 <CardContent className="mt-4">
                     <div className="flex flex-col space-y-4">
                         <div className="flex flex-row justify-start items-center space-x-4">
-                            <Button variant={"outline"}>Create new Map</Button>
-                            <Button variant={"outline"}>Add new Element</Button>
-                            <Button variant={"outline"}>Add new Avatar</Button>
+                            <Button variant={"outline"}
+                                onClick={() => {
+                                    navigate("/create-map");
+                                }}
+                            >Create new Map</Button>
+                            <Button variant={"outline"}
+                                onClick={() => {
+                                    navigate("/create-element");
+                                }}
+                            >Add new Element</Button>
+                            <Button variant={"outline"}
+                                onClick={() => {
+                                    navigate("/create-avatar");
+                                }}
+                            >Add new Avatar</Button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             <Card className="col-span-1 lg:col-span-2">
-                            <CardHeader className="bg-primary/5">
+                                <CardHeader className="bg-primary/5">
                                     <CardTitle>Maps</CardTitle>
                                     <CardDescription>
                                         Maps are the virtual worlds that users can explore and interact with.
@@ -103,7 +117,7 @@ export function MainComponent() {
                                 </CardContent>
                             </Card>
                             <Card className="col-span-1">
-                            <CardHeader className="bg-primary/5">
+                                <CardHeader className="bg-primary/5">
                                     <CardTitle>Avatars</CardTitle>
                                     <CardDescription>
                                         Avatars are the virtual representations of users.
