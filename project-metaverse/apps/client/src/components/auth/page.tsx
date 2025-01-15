@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe2, LockKeyhole, Loader2 } from 'lucide-react';
+import { Globe2, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,12 +54,8 @@ export function AuthPage({ signup }: { signup?: boolean }) {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-6">
-            <Globe2 className="h-10 w-10 text-indigo-600" />
-            <span className="text-3xl font-bold text-gray-900">VirtualMeet</span>
-          </div>
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 mb-4">
-            <LockKeyhole className="h-8 w-8 text-indigo-600" />
+          <Globe2 className="h-10 w-10 text-indigo-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome {signup ? "Back" : ""}

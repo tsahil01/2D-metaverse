@@ -1,9 +1,10 @@
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Navbar } from './nav/navbar';
 
 export function Home() {
+    const token = localStorage.getItem("token");
     return (
-        <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white">
+        <div className="min-h-screen bg-gradient-to-b from-indigo-100 via-white to-white">
             <header className="relative overflow-hidden">
                 <Navbar />
 
@@ -13,8 +14,8 @@ export function Home() {
                         <div className="flex-1 text-center lg:text-left max-w-2xl mx-auto lg:mx-0">
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight">
                                 Virtual Spaces for{' '}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
-                                    Real Connections
+                                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
+                                    Your Team
                                 </span>
                             </h1>
                             
@@ -24,14 +25,17 @@ export function Home() {
                             </p>
                             
                             <div className="mt-10 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-                                <button className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 transform hover:-translate-y-0.5 transition-all duration-200">
-                                    <span>Try Demo</span>
+                                <button
+                                onClick={() => {
+                                    if (token) {
+                                        window.location.href = "/dashboard";
+                                    } else {
+                                        window.location.href = "/signup";
+                                    }
+                                }}
+                                className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 transform hover:-translate-y-0.5 transition-all duration-200">
+                                    <span>Try Now</span>
                                     <ArrowRight className="w-5 h-5 ml-2" />
-                                </button>
-                                
-                                <button className="inline-flex items-center justify-center px-8 py-4 rounded-full border-2 border-gray-200 text-gray-700 font-medium hover:border-indigo-600 hover:text-indigo-600 transition-colors duration-200">
-                                    <Play className="w-5 h-5 mr-2" />
-                                    <span>Watch Video</span>
                                 </button>
                             </div>
                         </div>

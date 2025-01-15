@@ -61,4 +61,20 @@ user.get('/metadata/bulk', userMiddleware, async (req, res) => {
 
 })
 
+user.get('/metadata', userMiddleware, async (req, res) => {
+    const user = await client.user.findUnique({
+        where: {
+            id: req.userId
+        },
+        select: {
+            avatar: true
+        }
+    });
+
+    res.json({
+        avatarId: user?.avatar?.id,
+        avatarUrl: user?.avatar?.imageUrl
+    })
+});
+
 export default user;
