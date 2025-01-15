@@ -95,3 +95,17 @@ export const AddElementToSpaceSchema = z.object({
 export const DeleteElementFromSpaceSchema = z.object({
     id: z.string()
 })
+
+
+export const GetMapviaIdSchema = z.object({
+    id: z.string()
+})
+
+
+export const UpdateMapSchema = z.object({
+    defaultElements: z.array(z.object({
+        elementId: z.string(),
+        x: z.number(),
+        y: z.number()
+    })).optional()
+})

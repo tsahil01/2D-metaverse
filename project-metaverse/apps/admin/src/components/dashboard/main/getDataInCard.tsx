@@ -17,7 +17,11 @@ export function MapCard({ id, name, thumbnail, height, width, mapElements }: Map
                 <CardDescription>{height}x{width}</CardDescription>
             </CardContent>
             <CardFooter className="flex justify-between">
-                <Button variant={'outline'}>View</Button>
+                <Button variant={'outline'}
+                    onClick={() => {
+                        window.location.href = `/map/${id}`;
+                    }}
+                >View</Button>
                 <Button variant={'outline'}>Delete</Button>
             </CardFooter>
         </Card>

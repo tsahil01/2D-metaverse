@@ -1,5 +1,5 @@
 import express from "express"
-import { CreateAvatarSchema, CreateElementSchema, CreateMapSchema, UpdateElementSchema } from "../../../types";
+import { CreateAvatarSchema, CreateElementSchema, CreateMapSchema, GetMapviaIdSchema, UpdateElementSchema, UpdateMapSchema } from "../../../types";
 import client from "@repo/db/client";
 import { adminMiddleware } from "../../../middleware/admin-middleware";
 
@@ -102,6 +102,50 @@ admin.post(`/map`, adminMiddleware, async (req, res) => {
     })
 });
 
+admin.put(`/map/:id`, adminMiddleware, async (req, res) => {
+    const parseData = GetMapviaIdSchema.safeParse(req.params);
+    if (!parseData.success) {
+        res.status(400).json({ msg: "Invalid Data send" });
+        return;
+    }
+
+    const data = req.body;
+    const parseBody = UpdateMapSchema.safeParse(data);
+
+    if (!parseBody.success) {
+        res.status(400).json({ msg: "Invalid Data send" });
+        return;
+    }
+
+    if((parseBody.data.defaultElements ?? []).length === 0) {
+        res.status(400).json({ msg: "Invalid Data send" });
+        return;
+    }
+
+    const map = await client.map.update({
+        where: {
+            id: parseData.data.id
+        },
+        data: {
+            mapElements: {
+                deleteMany: {},
+                create: parseBody.data.defaultElements?.map((element) => {
+                    return {
+                        elementId: element.elementId,
+                        x: element.x,
+                        y: element.y
+                    }
+                })
+            }
+        }
+    });
+
+    res.json({
+        id: map.id
+    })
+   
+});
+
 
 admin.get(`/map`, adminMiddleware, async (req, res) => {
     const maps = await client.map.findMany({
@@ -115,6 +159,34 @@ admin.get(`/map`, adminMiddleware, async (req, res) => {
     });
 
     res.json(maps);
+});
+
+admin.get(`/map/:id`, adminMiddleware, async (req, res) => {
+    const parseData = GetMapviaIdSchema.safeParse(req.params);
+    if (!parseData.success) {
+        res.status(400).json({ msg: "Invalid Data send" });
+        return;
+    }
+
+    const map = await client.map.findUnique({
+        where: {
+            id: parseData.data.id
+        },
+        include: {
+            mapElements: {
+                include: {
+                    element: true
+                }
+            }
+        }
+    });
+
+    if (!map) {
+        res.status(404).json({ msg: "Map not found" });
+        return;
+    }
+
+    res.json(map);
 });
 
 export default admin;
