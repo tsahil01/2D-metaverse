@@ -53,7 +53,7 @@ export function Spaces() {
                         </div>
                     )
                 }
-                {spaces.map(space => <SpaceCard {...space} />)}
+                {spaces.map(space => <SpaceCard key={space.id} {...space} />)}
             </CardContent>
         </Card>
     )
