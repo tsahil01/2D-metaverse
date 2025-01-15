@@ -120,7 +120,7 @@ export function MainComponent() {
                                 <CardHeader className="bg-primary/5">
                                     <CardTitle>Avatars</CardTitle>
                                     <CardDescription>
-                                        Avatars are the virtual representations of users.
+                                        Avatars are characters.
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="grid grid-cols-1 gap-4 mt-4">
