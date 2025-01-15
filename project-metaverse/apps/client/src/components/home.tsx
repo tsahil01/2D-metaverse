@@ -1,7 +1,7 @@
 import { ArrowRight, Play } from 'lucide-react';
-import { Navbar } from '../nav/navbar';
+import { Navbar } from './nav/navbar';
 
-export function Dashboard() {
+export function Home() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-white">
             <header className="relative overflow-hidden">
