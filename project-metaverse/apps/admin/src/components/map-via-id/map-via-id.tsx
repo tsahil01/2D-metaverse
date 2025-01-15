@@ -1,4 +1,4 @@
-import { ElementInterface, ElementWithPositionInterface } from "@/lib/types";
+import { ElementInterface, ElementWithPositionInterface, MapElementInterface } from "@/lib/types";
 import { useEffect, useState, useCallback } from "react";
 import Phaser from "phaser";
 import { BACKEND_URL } from "@/lib/config";
@@ -21,8 +21,7 @@ export function MapViaId({ id }: { id: string }) {
                 },
             });
             const data = await response.json();
-            console.log("Map data", data);
-            setElements(data.mapElements.map((element) => ({
+            setElements(data.mapElements.map((element: MapElementInterface) => ({
                 ...element.element, x: element.x, y: element.y
             })));
             setDimension(`${data.height}x${data.width}`);
@@ -35,7 +34,6 @@ export function MapViaId({ id }: { id: string }) {
         try {
             const response = await fetch(`${BACKEND_URL}/elements`);
             const data = await response.json();
-            console.log(data);
             setAvailableElements(data.elements);
         } catch (error) {
             console.error("Failed to fetch elements:", error);
@@ -117,12 +115,7 @@ export function MapViaId({ id }: { id: string }) {
 
             // Load element assets
             [...elements, ...availableElements].forEach((item) => {
-                if (item.name) {
-
                     this.load.image(item.name, item.imageUrl);
-                } else {
-                    this.load.image(item.element.name, item.element.imageUrl);
-                }
             });
         }
 
@@ -234,7 +227,7 @@ export function MapViaId({ id }: { id: string }) {
     }, [isEditMode, elements, availableElements]);
 
     return (
-        <div className="flex flex-col gap-4 mt-8 border-t pt-4">
+        <div className="flex flex-col gap-4">
             <div className="space-x-4">
                 <Button
                     className={`px-4 py-2 rounded ${isEditMode ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
