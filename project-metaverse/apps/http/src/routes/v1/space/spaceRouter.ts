@@ -19,7 +19,8 @@ space.post("/", userMiddleware, async (req: Request, res: Response) => {
                 name: parseData.data.name,
                 width: parseInt(parseData.data.dimension.split("x")[0]),
                 height: parseInt(parseData.data.dimension.split("x")[1]),
-                creatorId: req.userId!
+                creatorId: req.userId!,
+                thumbnail: parseData.data.thumbnail || ""
             }
         });
 

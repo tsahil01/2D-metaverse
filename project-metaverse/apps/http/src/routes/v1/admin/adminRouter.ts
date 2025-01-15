@@ -2,6 +2,7 @@ import express from "express"
 import { CreateAvatarSchema, CreateElementSchema, CreateMapSchema, GetMapviaIdSchema, UpdateElementSchema, UpdateMapSchema } from "../../../types";
 import client from "@repo/db/client";
 import { adminMiddleware } from "../../../middleware/admin-middleware";
+import { userMiddleware } from "../../../middleware/user-middleware";
 
 const admin = express.Router();
 
@@ -147,7 +148,7 @@ admin.put(`/map/:id`, adminMiddleware, async (req, res) => {
 });
 
 
-admin.get(`/map`, adminMiddleware, async (req, res) => {
+admin.get(`/map`, userMiddleware, async (req, res) => {
     const maps = await client.map.findMany({
         include: {
             mapElements: {
@@ -161,7 +162,7 @@ admin.get(`/map`, adminMiddleware, async (req, res) => {
     res.json(maps);
 });
 
-admin.get(`/map/:id`, adminMiddleware, async (req, res) => {
+admin.get(`/map/:id`, userMiddleware, async (req, res) => {
     const parseData = GetMapviaIdSchema.safeParse(req.params);
     if (!parseData.success) {
         res.status(400).json({ msg: "Invalid Data send" });
