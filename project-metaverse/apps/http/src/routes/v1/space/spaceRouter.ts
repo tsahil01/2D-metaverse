@@ -152,12 +152,13 @@ space.get("/:spaceId", userMiddleware, async (req, res) => {
     const elements = space.spaceElements.map(e => {
         return {
             id: e.id,
-            elements: {
+            element: {
                 id: e.element.id,
                 imageUrl: e.element.imageUrl,
                 static: e.element.static,
                 height: e.element.height,
-                width: e.element.width
+                width: e.element.width,
+                name: e.element.name
             },
             x: e.x,
             y: e.y
