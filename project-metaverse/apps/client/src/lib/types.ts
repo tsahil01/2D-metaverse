@@ -37,3 +37,8 @@ export interface MapInterface {
     width: number;
     mapElements: MapElementInterface[];
 }
+
+export interface AvatarInterface {
+    avatarId: string;
+    avatarUrl: string;
+}
