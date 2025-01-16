@@ -61,6 +61,7 @@ export function Spaces() {
 
 
 function SpaceCard({ ...props }: SpaceCardProps) {
+    const navigate = useNavigate();
     return (
         <Card className='shadow-lg rounded-lg p-4' key={props.id}>
             <CardHeader>
@@ -72,8 +73,10 @@ function SpaceCard({ ...props }: SpaceCardProps) {
                     {props.width}x{props.height}
                 </CardDescription>
             </CardContent>
-            <CardFooter>
-                <Button>Open</Button>
+            <CardFooter className='flex flex-row justify-between'>
+                <Button
+                    onClick={() => navigate(`/space/${props.id}`)}
+                >Open</Button>
                 <Button>Delete</Button>
             </CardFooter>
         </Card>
