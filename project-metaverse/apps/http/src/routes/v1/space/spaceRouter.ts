@@ -11,9 +11,7 @@ space.post("/", userMiddleware, async (req: Request, res: Response) => {
         return res.status(400).json({
             msg: "Invalid Data send"
         })
-    }
-
-    console.log("Creating space", parseData.data);  
+    } 
 
     if (!parseData.data.mapId) {
         const newSpace = await client.space.create({
@@ -25,8 +23,6 @@ space.post("/", userMiddleware, async (req: Request, res: Response) => {
                 thumbnail: parseData.data.thumbnail || ""
             }
         });
-
-        console.log("Space created successfully", newSpace);
         
         res.json({ spaceId: newSpace.id })
         return;
@@ -123,7 +119,6 @@ space.get("/all", userMiddleware, async (req, res) => {
         }
     });
 
-    console.log("Spaces", spaces);
 
     return res.json({
         spaces
