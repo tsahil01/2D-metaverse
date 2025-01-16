@@ -61,9 +61,9 @@ export function Spaces() {
 
 
 function SpaceCard({ ...props }: SpaceCardProps) {
-    const navigate = useNavigate();
     return (
         <Card className='shadow-lg rounded-lg p-4' key={props.id}>
+            {JSON.stringify(props)}
             <CardHeader>
                 <img src={props.thumbnail || ""} alt={props.id} />
             </CardHeader>
@@ -75,7 +75,7 @@ function SpaceCard({ ...props }: SpaceCardProps) {
             </CardContent>
             <CardFooter className='flex flex-row justify-between'>
                 <Button
-                    onClick={() => navigate(`/space/${props.id}`)}
+                    onClick={() => {window.location.href = `/space/${props.id}`}}
                 >Open</Button>
                 <Button>Delete</Button>
             </CardFooter>

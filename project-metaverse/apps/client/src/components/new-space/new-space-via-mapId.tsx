@@ -36,6 +36,7 @@ export function MapViaId({ id }: { id: string }) {
     };
 
     async function createSpace() {
+        console.log("Creating space", thumbnail, name, dimension, id);
         const res = await fetch(`${BACKEND_URL}/space`, {
             method: "POST",
             headers: {

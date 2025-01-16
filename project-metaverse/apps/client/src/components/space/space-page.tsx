@@ -32,7 +32,6 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-
                 const data = await res.json();
                 console.log("data", data);
 
@@ -64,21 +63,17 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     Authorization: `Bearer ${token}`,
                 },
             });
-
             const data = await res.json();
             console.log("avatar", data);
             setAvatar(data);
         }
-
         getAvatar();
         getSpace();
     }, [token, spaceId]);
 
     useEffect(() => {
         if (isLoading || !dimensions || !avatar?.avatarUrl) return;
-    
         const [width, height] = dimensions.split("x").map(Number);
-    
         const config: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
             width,
@@ -93,6 +88,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 create,
                 update,
             },
+            pixelArt: true,
         };
     
         const game = new Phaser.Game(config);
@@ -110,45 +106,48 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     
             // Load floor and other elements
             this.load.image("floor", "/assets/floor.png");
-    
             elements.forEach((item) => {
                 this.load.image(item.name, item.imageUrl);
             });
         }
     
         function create(this: Phaser.Scene) {
+            // Add floor
             for (let i = 0; i <= width; i += 32) {
                 for (let j = 0; j <= height; j += 32) {
                     this.add.image(i, j, "floor");
                 }
             }
-    
+        
+            // Add game elements
             elements.forEach((item) => {
                 const element = this.physics.add.sprite(item.x, item.y, item.name);
-                element.setData('static', item.static);
-                
+                element.setData("static", item.static);
+        
                 if (item.static) {
-                  element.setImmovable(true);
+                    element.setImmovable(true);
                 }
                 element.body.setAllowGravity(false);
-                
-                // Set depth based on y position for proper layering
                 element.setDepth(item.y);
-                
                 gameElements.push(element);
-              });
-    
+            });
+        
             // Create player
             player = this.physics.add.sprite(
                 Phaser.Math.Between(5, width - 5),
                 Phaser.Math.Between(5, height - 5),
                 "character"
             );
-    
+        
             player.setCollideWorldBounds(true);
             player.body.setAllowGravity(false);
             player.setDepth(99999);
-    
+        
+            // Make the camera follow the player
+            this.cameras.main.startFollow(player, true);
+            this.cameras.main.setZoom(1); // Adjust zoom level if needed
+        
+            // Create animations
             [
                 { key: "stand-front", start: 0, end: 0 },
                 { key: "walk-front", start: 1, end: 2 },
@@ -171,23 +170,25 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     repeat: start === end ? 0 : -1,
                 });
             });
-    
+        
             player.play("stand-front");
             cursors = this.input.keyboard.createCursorKeys()!;
-    
+        
+            // Add collisions with game elements
             gameElements.forEach((element) => {
                 if (element.getData("static")) {
                     this.physics.add.collider(player, element);
                 }
             });
         }
-    
-        function update(this: Phaser.Scene) {
+        
+        
+        function update() {
             let moved = false;
             const speed = 100;
-    
+        
             player.setVelocity(0);
-    
+        
             if (cursors.left?.isDown) {
                 player.setVelocityX(-speed);
                 player.play("walk-left", true);
@@ -197,17 +198,21 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 player.play("walk-right", true);
                 moved = true;
             }
-    
-            if (cursors.up?.isDown) {
-                player.setVelocityY(-speed);
-                player.play("walk-back", true);
-                moved = true;
-            } else if (cursors.down?.isDown) {
-                player.setVelocityY(speed);
-                player.play("walk-front", true);
-                moved = true;
+        
+            // Allow movement in Y-axis only if not moving in X-axis
+            if (!moved) {
+                if (cursors.up?.isDown) {
+                    player.setVelocityY(-speed);
+                    player.play("walk-back", true);
+                    moved = true;
+                } else if (cursors.down?.isDown) {
+                    player.setVelocityY(speed);
+                    player.play("walk-front", true);
+                    moved = true;
+                }
             }
-    
+        
+            // If no movement keys are pressed, play stand animation based on last direction
             if (!moved && player.anims.currentAnim) {
                 const animKey = player.anims.currentAnim.key;
                 if (animKey.startsWith("walk")) {
@@ -215,18 +220,22 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     player.play(`stand-${direction}`);
                 }
             }
-    
+        
+            // Example of triggering an action with spacebar
             if (Phaser.Input.Keyboard.JustDown(cursors.space!)) {
                 player.play("say-hi-right");
             }
-    
-            // Update depth based on y position for proper layering
+        
+            // Set depth based on Y position
             player.setDepth(player.y);
             gameElements.forEach((element) => {
                 element.setDepth(element.y);
             });
+        
+            // Ensure the camera stays within the world bounds
+            this.cameras.main.setBounds(0, 0, width, height);
         }
-    
+        
         return () => {
             game.destroy(true);
         };
@@ -234,7 +243,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     
 
     return (
-        <main className="flex flex-row h-screen w-screen">
+        <main className="flex flex-row h-full w-screen">
             {isLoading ? (
                 <div className="flex items-center justify-center w-full h-full">
                     <p>Loading...</p>
@@ -249,3 +258,4 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
         </main>
     );
 }
+

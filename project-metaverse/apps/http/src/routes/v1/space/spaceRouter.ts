@@ -13,6 +13,8 @@ space.post("/", userMiddleware, async (req: Request, res: Response) => {
         })
     }
 
+    console.log("Creating space", parseData.data);  
+
     if (!parseData.data.mapId) {
         const newSpace = await client.space.create({
             data: {
@@ -24,6 +26,8 @@ space.post("/", userMiddleware, async (req: Request, res: Response) => {
             }
         });
 
+        console.log("Space created successfully", newSpace);
+        
         res.json({ spaceId: newSpace.id })
         return;
     }
@@ -50,7 +54,8 @@ space.post("/", userMiddleware, async (req: Request, res: Response) => {
                 name: parseData.data.name,
                 width: map.width,
                 height: map.height,
-                creatorId: req.userId!
+                creatorId: req.userId!,
+                thumbnail: parseData.data.thumbnail || ""
             }
         });
 
@@ -117,6 +122,8 @@ space.get("/all", userMiddleware, async (req, res) => {
             creatorId: req.userId
         }
     });
+
+    console.log("Spaces", spaces);
 
     return res.json({
         spaces

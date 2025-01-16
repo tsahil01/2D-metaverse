@@ -52,6 +52,7 @@ export function SpaceEditor({ name, thumbnail, dimension }: MapEditorProps) {
 
 
   async function createSpace() {
+    console.log("Creating space", thumbnail, name, dimension);
     const res = await fetch(`${BACKEND_URL}/space`, {
       method: "POST",
       headers: {
