@@ -22,8 +22,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
 
     useEffect(() => {
         if (!token) return;
-
-        const getSpace = async () => {
+        async function getSpace(){
             try {
                 const res = await fetch(`${BACKEND_URL}/space/${spaceId}`, {
                     method: "GET",
@@ -33,8 +32,6 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     },
                 });
                 const data = await res.json();
-                console.log("data", data);
-
                 setDimensions(data.dimensions || null);
                 setElements(
                     data.elements.map((e: MapElementInterface) => ({
@@ -55,7 +52,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             }
         };
 
-        const getAvatar = async () => {
+        async function getAvatar(){
             const res = await fetch(`${BACKEND_URL}/user/metadata`, {
                 method: "GET",
                 headers: {
@@ -64,9 +61,8 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 },
             });
             const data = await res.json();
-            console.log("avatar", data);
             setAvatar(data);
-        }
+        };
         getAvatar();
         getSpace();
     }, [token, spaceId]);
@@ -81,8 +77,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     type: "join",
                     payload: {
                         spaceId,
-                        token,
-                        avatar: avatar?.avatarUrl,
+                        token
                     },
                 })
             );
@@ -95,11 +90,12 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             console.log("Disconnected from WS");
         };
         setWs(ws);
-    }, [token, spaceId, avatar]);
+    }, [token, spaceId]);
 
     useEffect(() => {
         if (isLoading || !dimensions || !avatar?.avatarUrl) return;
         const [width, height] = dimensions.split("x").map(Number);
+
         const config: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
             width,
@@ -116,13 +112,14 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             },
             pixelArt: true,
         };
-
         const game = new Phaser.Game(config);
+
         let player: Phaser.Physics.Arcade.Sprite;
         let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
         const gameElements: Phaser.Physics.Arcade.Sprite[] = [];
         let lastX: number;
         let lastY: number;
+
 
         function preload(this: Phaser.Scene) {
             const characterSprite = avatar?.avatarUrl || "/assets/default-avatar.png";
@@ -135,7 +132,9 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             elements.forEach((item) => {
                 this.load.image(item.name, item.imageUrl);
             });
+
         }
+
 
         function create(this: Phaser.Scene) {
             for (let i = 0; i <= width; i += 32) {
