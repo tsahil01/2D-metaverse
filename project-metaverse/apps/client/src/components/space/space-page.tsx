@@ -1,4 +1,4 @@
-import { BACKEND_URL } from "@/lib/config";
+import { BACKEND_URL, WS_URL } from "@/lib/config";
 import { AvatarInterface, ElementWithPositionInterface, MapElementInterface } from "@/lib/types";
 import { useEffect, useState } from "react";
 import Phaser from "phaser";
@@ -9,7 +9,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [avatar, setAvatar] = useState<AvatarInterface>();
-
+    const [ws, setWs] = useState<WebSocket | null>(null);
 
     useEffect(() => {
         const storedToken = localStorage.getItem("token");
@@ -72,6 +72,32 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     }, [token, spaceId]);
 
     useEffect(() => {
+        if (!token || !spaceId || !avatar) return;
+        const ws = new WebSocket(`${WS_URL}`);
+        ws.onopen = () => {
+            console.log("Connected to WS");
+            ws.send(
+                JSON.stringify({
+                    type: "join",
+                    payload: {
+                        spaceId,
+                        token,
+                        avatar: avatar?.avatarUrl,
+                    },
+                })
+            );
+        };
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log("WS message", data);
+        };
+        ws.onclose = () => {
+            console.log("Disconnected from WS");
+        };
+        setWs(ws);
+    }, [token, spaceId, avatar]);
+
+    useEffect(() => {
         if (isLoading || !dimensions || !avatar?.avatarUrl) return;
         const [width, height] = dimensions.split("x").map(Number);
         const config: Phaser.Types.Core.GameConfig = {
@@ -81,7 +107,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             parent: "phaser-game",
             physics: {
                 default: "arcade",
-                arcade: { debug: false },
+                arcade: { debug: true },
             },
             scene: {
                 preload,
@@ -90,40 +116,38 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             },
             pixelArt: true,
         };
-    
+
         const game = new Phaser.Game(config);
         let player: Phaser.Physics.Arcade.Sprite;
         let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-        let gameElements: Phaser.Physics.Arcade.Sprite[] = [];
-    
+        const gameElements: Phaser.Physics.Arcade.Sprite[] = [];
+        let lastX: number;
+        let lastY: number;
+
         function preload(this: Phaser.Scene) {
-            // Load character sprite or fallback avatar
             const characterSprite = avatar?.avatarUrl || "/assets/default-avatar.png";
             this.load.spritesheet("character", characterSprite, {
                 frameWidth: 32,
-                frameHeight: 64,
+                frameHeight: 62,
             });
-    
-            // Load floor and other elements
+
             this.load.image("floor", "/assets/floor.png");
             elements.forEach((item) => {
                 this.load.image(item.name, item.imageUrl);
             });
         }
-    
+
         function create(this: Phaser.Scene) {
-            // Add floor
             for (let i = 0; i <= width; i += 32) {
                 for (let j = 0; j <= height; j += 32) {
                     this.add.image(i, j, "floor");
                 }
             }
-        
-            // Add game elements
+
             elements.forEach((item) => {
                 const element = this.physics.add.sprite(item.x, item.y, item.name);
                 element.setData("static", item.static);
-        
+
                 if (item.static) {
                     element.setImmovable(true);
                 }
@@ -131,23 +155,16 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 element.setDepth(item.y);
                 gameElements.push(element);
             });
-        
-            // Create player
+
             player = this.physics.add.sprite(
                 Phaser.Math.Between(5, width - 5),
                 Phaser.Math.Between(5, height - 5),
                 "character"
             );
-        
+
             player.setCollideWorldBounds(true);
-            player.body.setAllowGravity(false);
             player.setDepth(99999);
-        
-            // Make the camera follow the player
-            this.cameras.main.startFollow(player, true);
-            this.cameras.main.setZoom(1); // Adjust zoom level if needed
-        
-            // Create animations
+
             [
                 { key: "stand-front", start: 0, end: 0 },
                 { key: "walk-front", start: 1, end: 2 },
@@ -170,36 +187,38 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     repeat: start === end ? 0 : -1,
                 });
             });
-        
+
             player.play("stand-front");
-            cursors = this.input.keyboard.createCursorKeys()!;
-        
-            // Add collisions with game elements
+            if (this.input.keyboard) {
+                cursors = this.input.keyboard.createCursorKeys() as Phaser.Types.Input.Keyboard.CursorKeys;
+            }
+
             gameElements.forEach((element) => {
                 if (element.getData("static")) {
                     this.physics.add.collider(player, element);
                 }
             });
+
+            lastX = player.x;
+            lastY = player.y;
+
         }
-        
-        
-        function update() {
+
+        function update(this: Phaser.Scene) {
             let moved = false;
-            const speed = 100;
-        
+            const speed = 50;
             player.setVelocity(0);
-        
+
             if (cursors.left?.isDown) {
-                player.setVelocityX(-speed);
                 player.play("walk-left", true);
+                player.setVelocityX(-speed);
                 moved = true;
             } else if (cursors.right?.isDown) {
                 player.setVelocityX(speed);
                 player.play("walk-right", true);
                 moved = true;
             }
-        
-            // Allow movement in Y-axis only if not moving in X-axis
+
             if (!moved) {
                 if (cursors.up?.isDown) {
                     player.setVelocityY(-speed);
@@ -211,8 +230,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     moved = true;
                 }
             }
-        
-            // If no movement keys are pressed, play stand animation based on last direction
+
             if (!moved && player.anims.currentAnim) {
                 const animKey = player.anims.currentAnim.key;
                 if (animKey.startsWith("walk")) {
@@ -220,27 +238,38 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     player.play(`stand-${direction}`);
                 }
             }
-        
-            // Example of triggering an action with spacebar
+
             if (Phaser.Input.Keyboard.JustDown(cursors.space!)) {
                 player.play("say-hi-right");
             }
-        
-            // Set depth based on Y position
+
             player.setDepth(player.y);
             gameElements.forEach((element) => {
                 element.setDepth(element.y);
             });
-        
-            // Ensure the camera stays within the world bounds
-            this.cameras.main.setBounds(0, 0, width, height);
+
+            if (lastX !== player.x || lastY !== player.y) {
+                ws?.send(
+                    JSON.stringify({
+                        type: "movement",
+                        payload: {
+                            x: player.x,
+                            y: player.y,
+                        },
+                    })
+                );
+            }
+
+            lastX = player.x;
+            lastY = player.y;
         }
-        
+
+
         return () => {
             game.destroy(true);
+            ws?.close();
         };
     }, [elements, dimensions, isLoading, avatar]);
-    
 
     return (
         <main className="flex flex-row h-full w-screen">
@@ -251,7 +280,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             ) : (
                 <div
                     id="phaser-game"
-                    className="absolute inset-0 bg-primary/5"
+                    className="absolute inset-0 bg-primary/5 border"
                 ></div>
 
             )}
