@@ -35,7 +35,6 @@ export class User {
                 case 'join': {
                     const spaceId = parseData.payload.spaceId;
                     const token = parseData.payload.token;
-                    const avatar = parseData.payload.avatar;
                     const userId = (jwt.verify(token, JWT_SECRET) as JwtPayload).userId;
                     if (!userId) {
                         this.ws.close()
@@ -66,7 +65,6 @@ export class User {
                                 x: this.x,
                                 y: this.y
                             },
-                            avatar: avatar,
                             users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({ id: u.id })) ?? []
                         }
                     });
@@ -76,8 +74,7 @@ export class User {
                         payload: {
                             userId: this.userId,
                             x: this.x,
-                            y: this.y,
-                            avatar: avatar
+                            y: this.y
                         }
                     }, this, this.spaceId!);
                     break;
@@ -86,9 +83,10 @@ export class User {
                     const moveX = parseData.payload.x;
                     const moveY = parseData.payload.y;
 
-                    console.log("MOVEMENT", moveX, moveY)
+                    const xDisplacement = Math.abs(this.x - moveX)
+                    const yDisplacement = Math.abs(this.y - moveY)
 
-                    if (moveX >= 0 && moveY >= 0) {
+                    if ((xDisplacement == 1 && yDisplacement == 0) || (xDisplacement == 0 || yDisplacement == 1)) {
                         this.x = moveX;
                         this.y = moveY;
 
