@@ -18,11 +18,10 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     const [avatar, setAvatar] = useState<AvatarInterface>();
     const [ws, setWs] = useState<WebSocket | null>(null);
     const [playerPosition, setPlayerPosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+    const wsRef = useRef<WebSocket | null>(null);
 
     const playerRef = useRef<Phaser.Physics.Arcade.Sprite | null>(null);
     const otherPlayersRef = useRef<OtherUser[]>([]);
-
-
     let player: Phaser.Physics.Arcade.Sprite;
     let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     const gameElements: Phaser.Physics.Arcade.Sprite[] = [];
@@ -42,8 +41,31 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 newPlayer.setDepth(99998);
                 gameElements.push(newPlayer);
             } else {
+                const oldX = existingPlayer.x;
+                const oldY = existingPlayer.y;
                 existingPlayer.x = otherPlayer.x;
                 existingPlayer.y = otherPlayer.y;
+
+                if (oldX !== otherPlayer.x) {
+                    if (oldX > otherPlayer.x) {
+                        existingPlayer.play("walk-left", true);
+                    } else {
+                        existingPlayer.play("walk-right", true);
+                    }
+                } 
+                else if (oldY !== otherPlayer.y) {
+                    if (oldY > otherPlayer.y) {
+                        existingPlayer.play("walk-back", true);
+                    } else {
+                        existingPlayer.play("walk-front", true);
+                    }
+                } else {
+                    const animKey = existingPlayer.anims.currentAnim?.key;
+                    if (animKey?.startsWith("walk")) {
+                        const direction = animKey.split("-")[1];
+                        existingPlayer.play(`stand-${direction}`);
+                    }
+                }
             }
         });
     }
@@ -138,16 +160,11 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("WS message", data);
-            // 1. I will get space-join message. having = {type: "space-join", payload: {spawn: {x: 0, y: 0}, users: []}}
-            // 2. If another user is already in the space, he will get user-joined message. having = {type: "user-joined", payload: {userId: "1", x: 0, y: 0}}
-            // 3. If I move, I will send movement message. having = {type: "movement", payload: {x: 0, y: 0}} and my moves are accecpected, I will get movement-accepted message. having = {type: "movement-accepted", payload: {x: 0, y: 0}}
-            // This will be broadcasted to all users in the space except me with user-moved message. having = {type: "user-moved", payload: {userId: "1", x: 0, y: 0}}
-            // 4. If my movement is rejected, I will get movement-rejected message. having = {type: "movement-rejected", payload: {x: 0, y: 0}}
-
             switch (data.type) {
                 case "space-join": {
                     setPlayerPosition({ x: data.payload.spawn.x, y: data.payload.spawn.y });
-                    otherPlayersRef.current = data.payload.users;
+                    const opArray = data.payload.users.map((u: { userId: string, x: number, y: number }) => ({ userId: u.userId, x: u.x, y: u.y }));
+                    otherPlayersRef.current = opArray;
                     break;
                 }
                 case "user-joined": {
@@ -155,6 +172,10 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     break;
                 }
                 case "user-moved": {
+                    if (!otherPlayersRef.current.find((u) => u.userId === data.payload.userId)) {
+                        otherPlayersRef.current.push({ userId: data.payload.userId, x: data.payload.x, y: data.payload.y });
+                    }
+
                     const userIndex = otherPlayersRef.current.findIndex((u) => u.userId === data.payload.userId);
                     if (userIndex !== -1) {
                         otherPlayersRef.current[userIndex] = { userId: data.payload.userId, x: data.payload.x, y: data.payload.y };
@@ -180,7 +201,17 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
         ws.onclose = () => {
             console.log("Disconnected from WS");
         };
+
+        wsRef.current = ws;
         setWs(ws);
+
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close(); // Clean up WebSocket when the component unmounts or changes
+                wsRef.current = null;
+            }
+        };
+
     }, [token, spaceId, avatar]);
 
     useEffect(() => {
@@ -212,9 +243,6 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
         };
         const game = new Phaser.Game(config);
 
-
-
-
         function preload(this: Phaser.Scene) {
             const characterSprite = avatar?.avatarUrl || "/assets/default-avatar.png";
             this.load.spritesheet("character", characterSprite, {
@@ -238,7 +266,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
 
             player = this.physics.add.sprite(playerPosition.x, playerPosition.y, "character");
             player.setCollideWorldBounds(true);
-            player.setDepth(99999); // this will make sure that the user is rendered on top of all other elements
+            player.setDepth(99999);
             playerRef.current = player;
 
 
@@ -250,7 +278,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     element.setImmovable(true);
                 }
                 element.body.setAllowGravity(false);
-                element.setDepth(element.y); // this will make sure that the elements are rendered in the correct order
+                element.setDepth(element.y);
                 gameElements.push(element);
             });
             [
@@ -356,6 +384,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
         return () => {
             game.destroy(true);
             ws?.close();
+
         };
     }, [elements, dimensions, isLoading, avatar]);
 

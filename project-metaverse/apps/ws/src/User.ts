@@ -3,10 +3,10 @@ import { JWT_SECRET } from ".";
 import { RoomManager } from "./RoomManager";
 import client from "@repo/db/client";
 import { WebSocket } from 'ws';
-
+import { v4 as uuidv4 } from 'uuid';
 
 function getRandomId() {
-    return Math.random().toString(36).substring(4);
+    return uuidv4();
 }
 
 export class User {
@@ -41,7 +41,7 @@ export class User {
                         return;
                     };
                     this.userId = userId;
-                    console.log("USER ID", userId);
+                    // console.log("USER ID", userId);
 
                     const space = await client.space.findFirst({
                         where: {
@@ -56,10 +56,10 @@ export class User {
                     this.spaceId = spaceId;
 
                     RoomManager.getInstance().addUserToRoom(this, spaceId);
-                    console.log("USER JOINED", this.id, spaceId);
-                    console.log("SPACE", space);
-                    console.log("ROOMS", RoomManager.getInstance().rooms);
-                    console.log("USERS in room", RoomManager.getInstance().rooms.get(spaceId));
+                    // console.log("USER JOINED", this.id, spaceId);
+                    // console.log("SPACE", space);
+                    // console.log("ROOMS", RoomManager.getInstance().rooms);
+                    // console.log("USERS in room", RoomManager.getInstance().rooms.get(spaceId));
                     this.x = Math.floor(Math.random() * space?.width)
                     this.y = Math.floor(Math.random() * space?.height)
 
@@ -70,7 +70,7 @@ export class User {
                                 x: this.x,
                                 y: this.y
                             },
-                            users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({ id: u.id, userId: u.userId })) ?? []
+                            users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({ id: u.id, userId: u.userId, x: u.x, y: u.y })) ?? []
                         }
                     });
 
@@ -139,6 +139,7 @@ export class User {
             }
         }, this, this.spaceId!);
         RoomManager.getInstance().removeUserFromRoom(this, this.spaceId!);
+        console.log("USER LEFT", this.userId, this.spaceId);
     }
 
 }

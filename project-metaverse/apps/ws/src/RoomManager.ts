@@ -28,8 +28,11 @@ export class RoomManager {
         if (!this.rooms.has(spaceId)) {
             return;
         }
-        this.rooms.set(spaceId, (this.rooms.get(spaceId)?.filter((u) => u.id === user.id)) ?? []);
-    };
+        this.rooms.set(spaceId, (this.rooms.get(spaceId)?.filter((u) => u.id !== user.id)) ?? []);
+        if (this.rooms.get(spaceId)?.length === 0) {
+            this.rooms.delete(spaceId); 
+        }
+    }
 
     public broadcast(message: any, user: User, roomId: string) {
         if (!this.rooms.has(roomId)) {
