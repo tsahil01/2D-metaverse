@@ -189,11 +189,6 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     break;
                 }
 
-                case "movement-accepted": {
-                    setPlayerPosition({ x: data.payload.x, y: data.payload.y });
-                    break;
-                }
-
                 case "user-left": {
                     otherPlayersRef.current = otherPlayersRef.current.filter((u) => u.userId !== data.payload.userId);
                     break;
@@ -355,7 +350,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
 
         function update(this: Phaser.Scene) {
             let moved = false;
-            const speed = 200;
+            const speed = 100;
             player.setVelocity(0);
 
             if (cursors.left?.isDown) {
