@@ -41,6 +41,7 @@ export class User {
                         return;
                     };
                     this.userId = userId;
+                    console.log("USER ID", userId);
 
                     const space = await client.space.findFirst({
                         where: {
@@ -55,6 +56,10 @@ export class User {
                     this.spaceId = spaceId;
 
                     RoomManager.getInstance().addUserToRoom(this, spaceId);
+                    console.log("USER JOINED", this.id, spaceId);
+                    console.log("SPACE", space);
+                    console.log("ROOMS", RoomManager.getInstance().rooms);
+                    console.log("USERS in room", RoomManager.getInstance().rooms.get(spaceId));
                     this.x = Math.floor(Math.random() * space?.width)
                     this.y = Math.floor(Math.random() * space?.height)
 
@@ -65,7 +70,7 @@ export class User {
                                 x: this.x,
                                 y: this.y
                             },
-                            users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({ id: u.id })) ?? []
+                            users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({ id: u.id, userId: u.userId })) ?? []
                         }
                     });
 
@@ -86,20 +91,29 @@ export class User {
                     const xDisplacement = Math.abs(this.x - moveX)
                     const yDisplacement = Math.abs(this.y - moveY)
 
-                    if ((xDisplacement == 1 && yDisplacement == 0) || (xDisplacement == 0 || yDisplacement == 1)) {
+                    if ((xDisplacement <= 50 && yDisplacement === 0) || (yDisplacement <= 50 && xDisplacement === 0)) {
                         this.x = moveX;
                         this.y = moveY;
 
                         RoomManager.getInstance().broadcast({
-                            type: 'movement',
+                            type: 'user-moved',
                             payload: {
                                 x: this.x,
                                 y: this.y,
                                 userId: this.userId
                             },
                         }, this, this.spaceId!)
+
+                        this.send({
+                            type: "movement-accepted",
+                            payload: {
+                                x: this.x,
+                                y: this.y
+                            }
+                        })
                         return;
                     };
+
                     this.send({
                         type: "movement-rejected",
                         payload: {

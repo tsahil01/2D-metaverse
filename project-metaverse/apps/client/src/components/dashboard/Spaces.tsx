@@ -63,7 +63,6 @@ export function Spaces() {
 function SpaceCard({ ...props }: SpaceCardProps) {
     return (
         <Card className='shadow-lg rounded-lg p-4' key={props.id}>
-            {JSON.stringify(props)}
             <CardHeader>
                 <img src={props.thumbnail || ""} alt={props.id} />
             </CardHeader>

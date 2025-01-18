@@ -1,7 +1,14 @@
 import { BACKEND_URL, WS_URL } from "@/lib/config";
 import { AvatarInterface, ElementWithPositionInterface, MapElementInterface } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Phaser from "phaser";
+
+
+interface OtherUser {
+    userId: string;
+    x: number;
+    y: number
+}
 
 export function SpacePage({ spaceId }: { spaceId: string }) {
     const [elements, setElements] = useState<ElementWithPositionInterface[]>([]);
@@ -10,10 +17,46 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     const [isLoading, setIsLoading] = useState(true);
     const [avatar, setAvatar] = useState<AvatarInterface>();
     const [ws, setWs] = useState<WebSocket | null>(null);
+    const [playerPosition, setPlayerPosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+
+    const playerRef = useRef<Phaser.Physics.Arcade.Sprite | null>(null);
+    const otherPlayersRef = useRef<OtherUser[]>([]);
+
+
+    let player: Phaser.Physics.Arcade.Sprite;
+    let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+    const gameElements: Phaser.Physics.Arcade.Sprite[] = [];
+    let lastX: number;
+    let lastY: number;
+
+
+    function updateOtherPlayers(this: Phaser.Scene) {
+        otherPlayersRef.current.forEach((otherPlayer) => {
+            const existingPlayer = gameElements.find(
+                (element) => element.getData("userId") === otherPlayer.userId
+            );
+    
+            if (!existingPlayer) {
+                const newPlayer = this.physics.add.sprite(otherPlayer.x, otherPlayer.y, "character");
+                newPlayer.setData("userId", otherPlayer.userId);
+                newPlayer.setDepth(99998);
+                gameElements.push(newPlayer);
+            } else {
+                existingPlayer.x = otherPlayer.x;
+                existingPlayer.y = otherPlayer.y;
+            }
+        });
+    }
+    
+
+    // TODO: Implement this function
+    // async function getAvatarUsingUserId(userId: string) { };
+
 
     useEffect(() => {
         const storedToken = localStorage.getItem("token");
         if (!storedToken) {
+            alert("You need to be logged in to access this page");
             window.location.href = "/login";
         } else {
             setToken(storedToken);
@@ -22,7 +65,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
 
     useEffect(() => {
         if (!token) return;
-        async function getSpace(){
+        async function getSpace() {
             try {
                 const res = await fetch(`${BACKEND_URL}/space/${spaceId}`, {
                     method: "GET",
@@ -32,6 +75,11 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     },
                 });
                 const data = await res.json();
+                if (data === null) {
+                    alert("Space not found");
+                    window.location.href = "/";
+                    return;
+                }
                 setDimensions(data.dimensions || null);
                 setElements(
                     data.elements.map((e: MapElementInterface) => ({
@@ -52,7 +100,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             }
         };
 
-        async function getAvatar(){
+        async function getAvatar() {
             const res = await fetch(`${BACKEND_URL}/user/metadata`, {
                 method: "GET",
                 headers: {
@@ -61,6 +109,11 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 },
             });
             const data = await res.json();
+            if (data === null) {
+                alert("Avatar not found");
+                window.location.href = "/";
+                return;
+            }
             setAvatar(data);
         };
         getAvatar();
@@ -85,12 +138,57 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("WS message", data);
+            // 1. I will get space-join message. having = {type: "space-join", payload: {spawn: {x: 0, y: 0}, users: []}}
+            // 2. If another user is already in the space, he will get user-joined message. having = {type: "user-joined", payload: {userId: "1", x: 0, y: 0}}
+            // 3. If I move, I will send movement message. having = {type: "movement", payload: {x: 0, y: 0}} and my moves are accecpected, I will get movement-accepted message. having = {type: "movement-accepted", payload: {x: 0, y: 0}}
+            // This will be broadcasted to all users in the space except me with user-moved message. having = {type: "user-moved", payload: {userId: "1", x: 0, y: 0}}
+            // 4. If my movement is rejected, I will get movement-rejected message. having = {type: "movement-rejected", payload: {x: 0, y: 0}}
+
+            switch (data.type) {
+                case "space-join": {
+                    setPlayerPosition({ x: data.payload.spawn.x, y: data.payload.spawn.y });
+                    otherPlayersRef.current = data.payload.users;
+                    break;
+                }
+                case "user-joined": {
+                    otherPlayersRef.current = [...otherPlayersRef.current, { userId: data.payload.userId, x: data.payload.x, y: data.payload.y }];
+                    break;
+                }
+                case "user-moved": {
+                    const userIndex = otherPlayersRef.current.findIndex((u) => u.userId === data.payload.userId);
+                    if (userIndex !== -1) {
+                        otherPlayersRef.current[userIndex] = { userId: data.payload.userId, x: data.payload.x, y: data.payload.y };
+                    }
+                    break;
+                }
+                case "movement-rejected": {
+                    setPlayerPosition({ x: data.payload.x, y: data.payload.y });
+                    break;
+                }
+
+                case "movement-accepted": {
+                    setPlayerPosition({ x: data.payload.x, y: data.payload.y });
+                    break;
+                }
+
+                case "user-left": {
+                    otherPlayersRef.current = otherPlayersRef.current.filter((u) => u.userId !== data.payload.userId);
+                    break;
+                }
+            }
         };
         ws.onclose = () => {
             console.log("Disconnected from WS");
         };
         setWs(ws);
-    }, [token, spaceId]);
+    }, [token, spaceId, avatar]);
+
+    useEffect(() => {
+        if (playerRef.current) {
+            playerRef.current.x = playerPosition.x;
+            playerRef.current.y = playerPosition.y;
+        }
+    }, [playerPosition]);
 
     useEffect(() => {
         if (isLoading || !dimensions || !avatar?.avatarUrl) return;
@@ -103,7 +201,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             parent: "phaser-game",
             physics: {
                 default: "arcade",
-                arcade: { debug: true },
+                arcade: { debug: false },
             },
             scene: {
                 preload,
@@ -114,18 +212,14 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
         };
         const game = new Phaser.Game(config);
 
-        let player: Phaser.Physics.Arcade.Sprite;
-        let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-        const gameElements: Phaser.Physics.Arcade.Sprite[] = [];
-        let lastX: number;
-        let lastY: number;
+
 
 
         function preload(this: Phaser.Scene) {
             const characterSprite = avatar?.avatarUrl || "/assets/default-avatar.png";
             this.load.spritesheet("character", characterSprite, {
                 frameWidth: 32,
-                frameHeight: 62,
+                frameHeight: 64,
             });
 
             this.load.image("floor", "/assets/floor.png");
@@ -135,13 +229,18 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
 
         }
 
-
         function create(this: Phaser.Scene) {
             for (let i = 0; i <= width; i += 32) {
                 for (let j = 0; j <= height; j += 32) {
                     this.add.image(i, j, "floor");
                 }
             }
+
+            player = this.physics.add.sprite(playerPosition.x, playerPosition.y, "character");
+            player.setCollideWorldBounds(true);
+            player.setDepth(99999); // this will make sure that the user is rendered on top of all other elements
+            playerRef.current = player;
+
 
             elements.forEach((item) => {
                 const element = this.physics.add.sprite(item.x, item.y, item.name);
@@ -151,19 +250,9 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     element.setImmovable(true);
                 }
                 element.body.setAllowGravity(false);
-                element.setDepth(item.y);
+                element.setDepth(element.y); // this will make sure that the elements are rendered in the correct order
                 gameElements.push(element);
             });
-
-            player = this.physics.add.sprite(
-                Phaser.Math.Between(5, width - 5),
-                Phaser.Math.Between(5, height - 5),
-                "character"
-            );
-
-            player.setCollideWorldBounds(true);
-            player.setDepth(99999);
-
             [
                 { key: "stand-front", start: 0, end: 0 },
                 { key: "walk-front", start: 1, end: 2 },
@@ -242,11 +331,11 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 player.play("say-hi-right");
             }
 
-            player.setDepth(player.y);
             gameElements.forEach((element) => {
                 element.setDepth(element.y);
             });
 
+            updateOtherPlayers.call(this);
             if (lastX !== player.x || lastY !== player.y) {
                 ws?.send(
                     JSON.stringify({
