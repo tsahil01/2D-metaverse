@@ -25,8 +25,8 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     let player: Phaser.Physics.Arcade.Sprite;
     let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     const gameElements: Phaser.Physics.Arcade.Sprite[] = [];
-    let lastX: number;
-    let lastY: number;
+    const lastXRef = useRef<number>(0);
+    const lastYRef = useRef<number>(0);
 
 
     function updateOtherPlayers(this: Phaser.Scene) {
@@ -34,11 +34,11 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             const existingPlayer = gameElements.find(
                 (element) => element.getData("userId") === otherPlayer.userId
             );
-    
+
             if (!existingPlayer) {
                 const newPlayer = this.physics.add.sprite(otherPlayer.x, otherPlayer.y, "character");
                 newPlayer.setData("userId", otherPlayer.userId);
-                newPlayer.setDepth(99998);
+                newPlayer.setDepth(100000);
                 gameElements.push(newPlayer);
             } else {
                 const oldX = existingPlayer.x;
@@ -52,7 +52,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     } else {
                         existingPlayer.play("walk-right", true);
                     }
-                } 
+                }
                 else if (oldY !== otherPlayer.y) {
                     if (oldY > otherPlayer.y) {
                         existingPlayer.play("walk-back", true);
@@ -69,7 +69,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             }
         });
     }
-    
+
 
     // TODO: Implement this function
     // async function getAvatarUsingUserId(userId: string) { };
@@ -165,6 +165,8 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                     setPlayerPosition({ x: data.payload.spawn.x, y: data.payload.spawn.y });
                     const opArray = data.payload.users.map((u: { userId: string, x: number, y: number }) => ({ userId: u.userId, x: u.x, y: u.y }));
                     otherPlayersRef.current = opArray;
+
+
                     break;
                 }
                 case "user-joined": {
@@ -227,9 +229,12 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
 
         const config: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
-            width,
-            height,
-            parent: "phaser-game",
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                parent: 'phaser-game',
+                width: '100%',
+                height: '100%',
+            },
             physics: {
                 default: "arcade",
                 arcade: { debug: false },
@@ -242,6 +247,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             pixelArt: true,
         };
         const game = new Phaser.Game(config);
+        let mainCamera: Phaser.Cameras.Scene2D.Camera;
 
         function preload(this: Phaser.Scene) {
             const characterSprite = avatar?.avatarUrl || "/assets/default-avatar.png";
@@ -258,16 +264,43 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
         }
 
         function create(this: Phaser.Scene) {
+            this.physics.world.setBounds(0, 0, width, height);
+
             for (let i = 0; i <= width; i += 32) {
                 for (let j = 0; j <= height; j += 32) {
                     this.add.image(i, j, "floor");
                 }
             }
 
+            mainCamera = this.cameras.main;
+            mainCamera.setBounds(0, 0, width, height);
+
             player = this.physics.add.sprite(playerPosition.x, playerPosition.y, "character");
             player.setCollideWorldBounds(true);
             player.setDepth(99999);
             playerRef.current = player;
+
+            mainCamera.startFollow(player, true, 0.5, 0.5);
+            mainCamera.setZoom(1);
+
+            // Set up zoom controls
+            this.input.keyboard?.addKey('Q').on('down', () => {
+                mainCamera.setZoom(Math.max(0.5, mainCamera.zoom - 0.1));
+            });
+
+            this.input.keyboard?.addKey('E').on('down', () => {
+                mainCamera.setZoom(Math.min(2, mainCamera.zoom + 0.1));
+            });
+
+            const zoomX = this.game.canvas.width / width;
+            const zoomY = this.game.canvas.height / height;
+            const initialZoom = Math.min(zoomX, zoomY) * 0.8; // 80% of max possible zoom
+            mainCamera.setZoom(2); // Clamp between 0.5 and 2
+
+            // this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+            //     mainCamera.setViewport(0, 0, gameSize.width, gameSize.height);
+            // });
+
 
 
             elements.forEach((item) => {
@@ -315,14 +348,14 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 }
             });
 
-            lastX = player.x;
-            lastY = player.y;
+            lastXRef.current = 0;
+            lastYRef.current = 0;
 
         }
 
         function update(this: Phaser.Scene) {
             let moved = false;
-            const speed = 50;
+            const speed = 200;
             player.setVelocity(0);
 
             if (cursors.left?.isDown) {
@@ -359,25 +392,32 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
                 player.play("say-hi-right");
             }
 
-            gameElements.forEach((element) => {
-                element.setDepth(element.y);
-            });
+            // gameElements.forEach((element) => {
+            //     element.setDepth(element.y);
+            // });
 
             updateOtherPlayers.call(this);
-            if (lastX !== player.x || lastY !== player.y) {
+            if (lastXRef.current !== player.x || lastYRef.current !== player.y) {
                 ws?.send(
                     JSON.stringify({
                         type: "movement",
                         payload: {
-                            x: player.x,
-                            y: player.y,
+                            x: Math.round(player.x),
+                            y: Math.round(player.y),
                         },
                     })
                 );
             }
 
-            lastX = player.x;
-            lastY = player.y;
+            lastXRef.current = player.x;
+            lastYRef.current = player.y;
+
+            if (player && player.body && (player.body.velocity.x !== 0 || player.body.velocity.y !== 0)) {
+                mainCamera.stopFollow();
+                const targetX = player.x;
+                const targetY = player.y;
+                mainCamera.pan(targetX, targetY, 200);
+            }
         }
 
 
@@ -389,7 +429,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     }, [elements, dimensions, isLoading, avatar]);
 
     return (
-        <main className="flex flex-row h-full w-screen">
+        <main className="w-screen h-screen overflow-hidden">
             {isLoading ? (
                 <div className="flex items-center justify-center w-full h-full">
                     <p>Loading...</p>
@@ -397,9 +437,8 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             ) : (
                 <div
                     id="phaser-game"
-                    className="absolute inset-0 bg-primary/5 border"
+                    className="w-full h-full"
                 ></div>
-
             )}
         </main>
     );
