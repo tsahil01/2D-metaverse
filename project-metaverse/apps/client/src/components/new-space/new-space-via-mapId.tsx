@@ -28,7 +28,7 @@ export function MapViaId({ id }: { id: string }) {
                 x: element.x,
                 y: element.y,
             })));
-            setDimension(`${data.height}x${data.width}`);
+            setDimension(`${data.width}x${data.height}`);
             setThumbnail(data.thumbnail);
         } catch (error) {
             console.error("Failed to fetch map:", error);

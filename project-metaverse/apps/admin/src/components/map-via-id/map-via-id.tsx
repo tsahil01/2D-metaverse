@@ -24,7 +24,7 @@ export function MapViaId({ id }: { id: string }) {
             setElements(data.mapElements.map((element: MapElementInterface) => ({
                 ...element.element, x: element.x, y: element.y
             })));
-            setDimension(`${data.height}x${data.width}`);
+            setDimension(`${data.width}x${data.height}`);
         } catch (error) {
             console.error("Failed to fetch map:", error);
         }

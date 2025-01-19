@@ -74,6 +74,14 @@ export class User {
                         }
                     });
 
+                    // first remove the user if it exists in the room and then broadcast the user-joined event
+                    RoomManager.getInstance().broadcast({
+                        type: "user-left",
+                        payload: {
+                            userId: this.userId
+                        }
+                    }, this, this.spaceId!);
+
                     RoomManager.getInstance().broadcast({
                         type: "user-joined",
                         payload: {

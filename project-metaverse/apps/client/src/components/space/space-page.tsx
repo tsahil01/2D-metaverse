@@ -38,7 +38,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             if (!existingPlayer) {
                 const newPlayer = this.physics.add.sprite(otherPlayer.x, otherPlayer.y, "character");
                 newPlayer.setData("userId", otherPlayer.userId);
-                newPlayer.setDepth(100000);
+                newPlayer.setDepth(99999);
                 gameElements.push(newPlayer);
             } else {
                 const oldX = existingPlayer.x;
@@ -219,16 +219,17 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
     }, [playerPosition]);
 
     useEffect(() => {
-        if (isLoading || !dimensions || !avatar?.avatarUrl) return;
-        const [width, height] = dimensions.split("x").map(Number);
+        if (isLoading || !dimensions || !avatar?.avatarUrl || !playerPosition) return;
+        const width = parseInt(dimensions.split("x")[0]);
+        const height = parseInt(dimensions.split("x")[1]);
 
         const config: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
             scale: {
                 mode: Phaser.Scale.RESIZE,
                 parent: 'phaser-game',
-                width: '100%',
-                height: '100%',
+                width: "100%",
+                height: "100%",
             },
             physics: {
                 default: "arcade",
@@ -286,18 +287,7 @@ export function SpacePage({ spaceId }: { spaceId: string }) {
             this.input.keyboard?.addKey('E').on('down', () => {
                 mainCamera.setZoom(Math.min(2, mainCamera.zoom + 0.1));
             });
-
-            const zoomX = this.game.canvas.width / width;
-            const zoomY = this.game.canvas.height / height;
-            const initialZoom = Math.min(zoomX, zoomY) * 0.8; // 80% of max possible zoom
-            mainCamera.setZoom(2); // Clamp between 0.5 and 2
-
-            // this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
-            //     mainCamera.setViewport(0, 0, gameSize.width, gameSize.height);
-            // });
-
-
-
+            mainCamera.setZoom(4); // Clamp between 0.5 and 2
             elements.forEach((item) => {
                 const element = this.physics.add.sprite(item.x, item.y, item.name);
                 element.setData("static", item.static);
