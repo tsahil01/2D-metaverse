@@ -168,6 +168,7 @@ space.get("/:spaceId", userMiddleware, async (req, res) => {
     })
 
     return res.status(200).json({
+        name: space.name,
         dimensions: `${space.width}x${space.height}`,
         elements
     })
