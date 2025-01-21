@@ -112,11 +112,10 @@ export function SpaceMain({ spaceId = "cm628eno4000hk41j471e3kuo" }: { spaceId: 
     return (
         <>
             <div className="min-h-screen bg-gradient-to-b from-indigo-300 via-white to-white w-screen">
-                <SpaceInit spaceName={spaceName || ""} avatarUrl={avatar?.avatarUrl || ""} handleClick={handleClick} />
                 {
-                    showSpace &&  <WebSocketInit spaceId= {spaceId} token= {`${token}`} />
+                    !showSpace ? <SpaceInit spaceName={spaceName || ""} avatarUrl={avatar?.avatarUrl || ""} handleClick={handleClick} /> : <WebSocketInit spaceId={spaceId} token={`${token}`} />
                 }
-               
+
             </div>
         </>
     )
