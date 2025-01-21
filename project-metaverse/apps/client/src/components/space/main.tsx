@@ -1,6 +1,6 @@
 import { BACKEND_URL } from "@/lib/config";
 import { useEffect, useState } from "react";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { avatarAtom } from "@/lib/atom/avatarAtom";
 import { spaceElementsAtom } from "@/lib/atom/spaceElementsAtom";
 import { dimensionsAtom } from "@/lib/atom/dimensionsAtom";
@@ -9,6 +9,7 @@ import { userNameAtom } from "@/lib/atom/userNameAtom";
 import { MapElementInterface } from "@/lib/types";
 import { useNavigate } from "react-router-dom";
 import { SpaceInit } from "./spaceInit";
+import { WebSocketInit } from "./web-socket-init";
 
 export function SpaceMain({ spaceId = "cm628eno4000hk41j471e3kuo" }: { spaceId: string }) {
     const [isLoading, setIsLoading] = useState(true);
@@ -18,8 +19,9 @@ export function SpaceMain({ spaceId = "cm628eno4000hk41j471e3kuo" }: { spaceId: 
     const [avatar, setAvatar] = useRecoilState(avatarAtom);
     const setDimensions = useSetRecoilState(dimensionsAtom);
     const setElements = useSetRecoilState(spaceElementsAtom);
-    const [name, setName] = useRecoilState(userNameAtom);
+
     const [showSpace, setShowSpace] = useState(false);
+    const name = useRecoilValue(userNameAtom);
 
     const navigate = useNavigate();
 
@@ -111,7 +113,10 @@ export function SpaceMain({ spaceId = "cm628eno4000hk41j471e3kuo" }: { spaceId: 
         <>
             <div className="min-h-screen bg-gradient-to-b from-indigo-300 via-white to-white w-screen">
                 <SpaceInit spaceName={spaceName || ""} avatarUrl={avatar?.avatarUrl || ""} handleClick={handleClick} />
-
+                {
+                    showSpace &&  <WebSocketInit spaceId= {spaceId} token= {`${token}`} />
+                }
+               
             </div>
         </>
     )

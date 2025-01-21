@@ -1,4 +1,6 @@
+import { useSetRecoilState } from "recoil";
 import { Input } from "../ui/input";
+import { userNameAtom } from "@/lib/atom/userNameAtom";
 
 interface SpaceInitProps {
     spaceName: string;
@@ -6,7 +8,11 @@ interface SpaceInitProps {
     handleClick: () => void;
 }
 
+
+
 export function SpaceInit({ spaceName, avatarUrl, handleClick }: SpaceInitProps) {
+    const setName = useSetRecoilState(userNameAtom);
+
     return (
         <div className="flex flex-col gap-4 space-y-6 h-screen justify-center items-center mx-auto">
             <div className="text-3xl font-bold text-center">

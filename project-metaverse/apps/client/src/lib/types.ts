@@ -42,3 +42,9 @@ export interface AvatarInterface {
     avatarId: string;
     avatarUrl: string;
 }
+
+export interface OtherUser {
+    userId: string;
+    x: number;
+    y: number
+}
