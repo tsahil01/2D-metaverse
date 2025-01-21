@@ -1,16 +1,22 @@
 import { BACKEND_URL } from "@/lib/config";
-import { AvatarInterface, ElementWithPositionInterface } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input"
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { avatarAtom } from "@/lib/atom/avatarAtom";
+import { spaceElementsAtom } from "@/lib/atom/spaceElementsAtom";
+import { dimensionsAtom } from "@/lib/atom/dimensionsAtom";
+import { tokenAtom } from "@/lib/atom/tokenAtom";
+import { userNameAtom } from "@/lib/atom/userNameAtom";
 
 export function GettingSpace({ spaceId }: { spaceId: string }) {
-    const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [avatar, setAvatar] = useState<AvatarInterface>();
-    const [dimensions, setDimensions] = useState<string | null>(null);
-    const [elements, setElements] = useState<ElementWithPositionInterface[]>([]);
     const [spaceName, setSpaceName] = useState<string | null>(null);
-    const [name, setName] = useState<string | null>(null);
+
+    const [token, setToken] = useRecoilState(tokenAtom);
+    const [avatar, setAvatar] = useRecoilState(avatarAtom);
+    const setDimensions = useSetRecoilState(dimensionsAtom);
+    const setElements = useSetRecoilState(spaceElementsAtom);
+    const setName = useSetRecoilState(userNameAtom);
 
 
     useEffect(() => {
@@ -75,7 +81,6 @@ export function GettingSpace({ spaceId }: { spaceId: string }) {
                 window.location.href = "/";
                 return;
             }
-            console.log(data);
             setAvatar(data);
         };
         getAvatar();
@@ -92,18 +97,18 @@ export function GettingSpace({ spaceId }: { spaceId: string }) {
     return (
         <>
             <div className="h-screen w-screen flex flex-col gap-4 space-y-6 justify-center items-center container mx-auto">
-                <div className="text-5xl font-bold">
+                <div className="text-3xl font-bold">
                     Welcome to `{spaceName}`
                 </div>
                 <div className="flex flex-row max-w-lg mx-auto justify-center w-full gap-10">
                     <div
-                        className="w-[32px] h-[64px] bg-no-repeat bg-[length:512px_64px] scale-150 origin-top-left mx-auto mb-9"
+                        className="w-[32px] h-[64px] my-auto bg-no-repeat bg-[length:512px_64px] scale-150 origin-top-left mx-auto mb-9"
                         style={{
                             backgroundImage: `url(${avatar?.avatarUrl})`,
                             backgroundPosition: "0px 0px",
                         }}
                     ></div>
-                    <div className="grid w-full items-center gap-4">
+                    <div className="grid w-full items-center gap-4 my-auto">
                         <div className="flex flex-col space-y-1.5">
                             <Input id="name" placeholder="Enter Your Name" onChange={(e) => setName(e.target.value)} />
                         </div>
