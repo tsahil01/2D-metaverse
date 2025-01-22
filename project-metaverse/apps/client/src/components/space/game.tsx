@@ -30,6 +30,7 @@ export function Game() {
         otherPlayers.forEach((op) => {
             const existingPlayer = gameElements.find((e) => e.getData("userId") === op.userId);
             if (!existingPlayer) {
+                console.log("Creating new player", op);
                 const newPlayer = this.physics.add.sprite(op.x, op.y, "character");
                 newPlayer.setData("userId", op.userId);
                 newPlayer.setDepth(99999);
@@ -65,17 +66,14 @@ export function Game() {
 
 
     useEffect(() => {
-        console.log("Player position", playerPosition);
         if (playerRef.current) {
             playerRef.current?.setPosition(playerPosition.x, playerPosition.y);
         }
     }, [playerPosition])
 
     useEffect(() => {
-        console.log(dimensions, avatar, playerPosition, ws);
         if (!dimensions || !avatar?.avatarUrl || !playerPosition || !ws) return;
 
-        console.log("Creating game");
         const config: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
             scale: {
@@ -100,7 +98,6 @@ export function Game() {
         let mainCamera: Phaser.Cameras.Scene2D.Camera;
 
         function preload(this: Phaser.Scene) {
-            console.log("Preloading game");
             const characterSprite = avatar?.avatarUrl || "/assets/default-avatar.png";
             this.load.spritesheet("character", characterSprite, {
                 frameWidth: 32,
@@ -115,7 +112,6 @@ export function Game() {
         }
 
         function create(this: Phaser.Scene) {
-            console.log("Creating game");
             this.physics.world.setBounds(0, 0, width, height);
 
             for (let i = 0; i <= width; i += 32) {
@@ -127,15 +123,12 @@ export function Game() {
             mainCamera = this.cameras.main;
             mainCamera.setBounds(0, 0, width, height);
 
-            console.log("Above playerRef.current");
             playerRef.current = this.physics.add.sprite(playerPosition.x, playerPosition.y, "character");
             (playerRef.current).setCollideWorldBounds(true);
             (playerRef.current).setDepth(99999);
-            console.log("Hello1")
 
             mainCamera.startFollow(playerRef.current, true, 0.5, 0.5);
             mainCamera.setZoom(1);
-            console.log("Hello2")
 
             this.input.keyboard?.addKey('Q').on('down', () => {
                 mainCamera.setZoom(Math.max(0.5, mainCamera.zoom - 0.1));
@@ -178,7 +171,6 @@ export function Game() {
                     repeat: start === end ? 0 : -1,
                 });
             });
-            console.log("Hello3")
 
             playerRef.current.play("stand-front");
             if (this.input.keyboard) {
@@ -193,7 +185,6 @@ export function Game() {
 
             lastXRef.current = 0;
             lastYRef.current = 0;
-            console.log("Below playerRef.current");
 
         }
 
@@ -241,8 +232,6 @@ export function Game() {
 
             updateOtherPlayers.call(this);
             if (lastXRef.current !== player.x || lastYRef.current !== player.y) {
-                console.log("Sending movement");
-                console.log("WS", ws);
                 ws?.send(
                     JSON.stringify({
                         type: "movement",
@@ -268,10 +257,11 @@ export function Game() {
         return () => {
             game.destroy(true);
             ws?.close();
+            console.log("Game destroyed");
 
         };
 
-    }, [[elements, dimensions, avatar, ws]]);
+    }, []);
 
     return <>
         <main className="w-screen h-screen overflow-hidden">

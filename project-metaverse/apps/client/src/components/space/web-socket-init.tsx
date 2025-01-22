@@ -17,6 +17,7 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
     const [settingWs, setSettingWs] = useState(true);
 
     useEffect(() => {
+        console.log("Cominggggg")
         if (!token || !spaceId || !avatar) {
             alert("Invalid token or spaceId or avatar");
             return;
@@ -27,7 +28,6 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
 
         wsRef.current.onopen = () => {
             console.log("Connected to websocket");
-            setSettingWs(false);
             wsRef.current?.send(JSON.stringify({
                 type: "join",
                 payload: {
@@ -37,7 +37,7 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                 }
             }));
         };
-
+        
         wsRef.current.onmessage = (e) => {
             const data = JSON.parse(e.data);
             console.log("Received message", data);
@@ -52,6 +52,7 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                         }
                     ));
                     setOtherPlayers(opArray);
+                    setSettingWs(false);
                     break;
                 }
 
@@ -118,7 +119,7 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
             }
             setWs(null);
         };
-    }, [token, spaceId, avatar]);
+    }, []);
     return <>
 
         {settingWs && <div className="fixed top-0 left-0 w-full h-full bg-black flex justify-center items-center">
