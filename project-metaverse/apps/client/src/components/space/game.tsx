@@ -1,19 +1,18 @@
 import { avatarAtom } from "@/lib/atom/avatarAtom";
 import { dimensionsAtom } from "@/lib/atom/dimensionsAtom";
-import { otherPlayersAtom } from "@/lib/atom/otherPlayersAtom";
 import { playerPositionAtom } from "@/lib/atom/playerPositionAtom";
 import { spaceElementsAtom } from "@/lib/atom/spaceElementsAtom";
 import { wsAtom } from "@/lib/atom/wsAtom";
+import { OtherUser } from "@/lib/types";
 import { useEffect, useRef } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilValue } from "recoil";
 
-export function Game() {
+export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<OtherUser[]> }) {
 
     const avatar = useRecoilValue(avatarAtom);
     const dimensions = useRecoilValue(dimensionsAtom);
     const elements = useRecoilValue(spaceElementsAtom);
     const playerPosition = useRecoilValue(playerPositionAtom);
-    const [otherPlayers, setOtherPlayers] = useRecoilState(otherPlayersAtom);
 
     const width = parseInt(dimensions?.split("x")[0] || "0");
     const height = parseInt(dimensions?.split("x")[1] || "0");
@@ -27,7 +26,8 @@ export function Game() {
     const lastYRef = useRef<number>(0);
 
     function updateOtherPlayers(this: Phaser.Scene) {
-        otherPlayers.forEach((op) => {
+        if (!otherPlayersRef.current) return;
+        otherPlayersRef.current.forEach((op) => {
             const existingPlayer = gameElements.find((e) => e.getData("userId") === op.userId);
             if (!existingPlayer) {
                 console.log("Creating new player", op);

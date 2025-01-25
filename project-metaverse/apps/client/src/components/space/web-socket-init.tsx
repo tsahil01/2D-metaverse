@@ -1,11 +1,10 @@
 import { avatarAtom } from "@/lib/atom/avatarAtom";
-import { otherPlayersAtom } from "@/lib/atom/otherPlayersAtom";
 import { playerPositionAtom } from "@/lib/atom/playerPositionAtom";
 import { wsAtom } from "@/lib/atom/wsAtom";
 import { WS_URL } from "@/lib/config";
 import { OtherUser } from "@/lib/types";
 import { useEffect, useRef, useState } from "react";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { Game } from "./game";
 
 export function WebSocketInit({ spaceId, token }: { spaceId: string, token: string }) {
@@ -13,11 +12,10 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
     const avatar = useRecoilValue(avatarAtom);
     const setWs = useSetRecoilState(wsAtom);
     const setPlayerPosition = useSetRecoilState(playerPositionAtom);
-    const [otherPlayers, setOtherPlayers] = useRecoilState(otherPlayersAtom);
+    const otherPlayersRef = useRef<OtherUser[]>([]);
     const [settingWs, setSettingWs] = useState(true);
 
     useEffect(() => {
-        console.log("Cominggggg")
         if (!token || !spaceId || !avatar) {
             alert("Invalid token or spaceId or avatar");
             return;
@@ -37,7 +35,7 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                 }
             }));
         };
-        
+
         wsRef.current.onmessage = (e) => {
             const data = JSON.parse(e.data);
             console.log("Received message", data);
@@ -51,7 +49,7 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                             y: u.y
                         }
                     ));
-                    setOtherPlayers(opArray);
+                    otherPlayersRef.current = opArray;
                     setSettingWs(false);
                     break;
                 }
@@ -62,26 +60,18 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                         x: data.payload.x,
                         y: data.payload.y
                     }
-                    setOtherPlayers([...otherPlayers, newPlayer]);
+                    otherPlayersRef.current.push(newPlayer);
                     break;
                 }
 
-                case "user-move": {
-                    if (!otherPlayers.find((p) => p.userId === data.payload.userId)) {
-                        setOtherPlayers([...otherPlayers, {
-                            userId: data.payload.userId,
-                            x: data.payload.x,
-                            y: data.payload.y
-                        }]);
-                    }
-
-                    const userIndex = otherPlayers.findIndex((p) => p.userId === data.payload.userId);
-                    if (userIndex === -1) {
+                case "user-moved": {
+                    const findPlayer = otherPlayersRef.current.find((p) => p.userId === data.payload.userId);
+                    if (!findPlayer) {
                         console.log("User not found");
                         return;
                     }
-                    otherPlayers[userIndex].x = data.payload.x;
-                    otherPlayers[userIndex].y = data.payload.y;
+                    findPlayer.x = data.payload.x;
+                    findPlayer.y = data.payload.y;
                     break;
                 }
 
@@ -91,12 +81,12 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                 }
 
                 case "user-left": {
-                    const findPlayer = otherPlayers.find((p) => p.userId === data.payload.userId);
-                    if (!findPlayer) {
+                    const index = otherPlayersRef.current.findIndex((p) => p.userId === data.payload.userId);
+                    if (index < 0) {
                         console.log("User not found");
                         return;
                     }
-                    setOtherPlayers(otherPlayers.filter((p) => p.userId !== data.payload.userId));
+                    otherPlayersRef.current.splice(index, 1);
                     break;
                 }
             }
@@ -127,7 +117,7 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
         </div>}
 
         {
-            !settingWs && <Game />
+            !settingWs && <Game otherPlayersRef={otherPlayersRef} />
         }
 
     </>
