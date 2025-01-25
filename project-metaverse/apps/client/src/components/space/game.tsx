@@ -34,14 +34,12 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
             if (!existingPlayer) {
                 console.log("Creating new player", op);
     
-                // Create a new player sprite
                 const newPlayer = this.physics.add.sprite(op.x, op.y, "character");
                 newPlayer.setData("userId", op.userId);
     
-                // Add username text for the new player
                 const usernameText = this.add.text(op.x, op.y - 10, op.userName || "Unknown", {
                     fontSize: '10px',
-                    color: 'grey',
+                    color: 'white',
                     padding: { x: 2, y: 2 },
                     resolution: 20,
                     align: 'center',
@@ -49,7 +47,6 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
                 usernameText.setOrigin(0.5, 0.5);
                 usernameText.setDepth(99999);
     
-                // Attach username text to the player
                 newPlayer.setData("usernameText", usernameText);
                 newPlayer.setDepth(99999);
     
@@ -58,7 +55,6 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
                 const oldX = existingPlayer.x;
                 const oldY = existingPlayer.y;
     
-                // Update existing player's position and username text
                 existingPlayer.setPosition(op.x, op.y);
                 const usernameText = existingPlayer.getData("usernameText");
                 if (usernameText) {
@@ -154,7 +150,7 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
 
             const usernameText = this.add.text(playerPosition.x, playerPosition.y - 18, userName, {
                 fontSize: '10px',
-                color: '#ffffff',
+                color: 'grey',
                 padding: { x: 2, y: 2 },
                 resolution: 20,
                 align: 'center',
