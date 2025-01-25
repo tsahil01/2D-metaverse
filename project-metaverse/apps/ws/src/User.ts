@@ -16,6 +16,7 @@ export class User {
     public ws: WebSocket;
     public x: number;
     public y: number;
+    public userName?: string;
 
 
     constructor(ws: WebSocket) {
@@ -41,6 +42,7 @@ export class User {
                         return;
                     };
                     this.userId = userId;
+                    this.userName = parseData.payload.userName;
                     // console.log("USER ID", userId);
 
                     const space = await client.space.findFirst({
@@ -70,7 +72,7 @@ export class User {
                                 x: this.x,
                                 y: this.y
                             },
-                            users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({ id: u.id, userId: u.userId, x: u.x, y: u.y })) ?? []
+                            users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({ id: u.id, userId: u.userId, x: u.x, y: u.y, userName: u.userName })) ?? []
                         }
                     });
 
@@ -87,7 +89,8 @@ export class User {
                         payload: {
                             userId: this.userId,
                             x: this.x,
-                            y: this.y
+                            y: this.y,
+                            userName: this.userName
                         }
                     }, this, this.spaceId!);
                     break;

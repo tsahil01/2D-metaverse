@@ -2,6 +2,7 @@ import { avatarAtom } from "@/lib/atom/avatarAtom";
 import { dimensionsAtom } from "@/lib/atom/dimensionsAtom";
 import { playerPositionAtom } from "@/lib/atom/playerPositionAtom";
 import { spaceElementsAtom } from "@/lib/atom/spaceElementsAtom";
+import { userNameAtom } from "@/lib/atom/userNameAtom";
 import { wsAtom } from "@/lib/atom/wsAtom";
 import { OtherUser } from "@/lib/types";
 import { useEffect, useRef } from "react";
@@ -13,6 +14,7 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
     const dimensions = useRecoilValue(dimensionsAtom);
     const elements = useRecoilValue(spaceElementsAtom);
     const playerPosition = useRecoilValue(playerPositionAtom);
+    const userName = useRecoilValue(userNameAtom) || "Unknown";
 
     const width = parseInt(dimensions?.split("x")[0] || "0");
     const height = parseInt(dimensions?.split("x")[1] || "0");
@@ -31,23 +33,45 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
             const existingPlayer = gameElements.find((e) => e.getData("userId") === op.userId);
             if (!existingPlayer) {
                 console.log("Creating new player", op);
+    
+                // Create a new player sprite
                 const newPlayer = this.physics.add.sprite(op.x, op.y, "character");
                 newPlayer.setData("userId", op.userId);
+    
+                // Add username text for the new player
+                const usernameText = this.add.text(op.x, op.y - 10, op.userName || "Unknown", {
+                    fontSize: '10px',
+                    color: 'grey',
+                    padding: { x: 2, y: 2 },
+                    resolution: 20,
+                    align: 'center',
+                });
+                usernameText.setOrigin(0.5, 0.5);
+                usernameText.setDepth(99999);
+    
+                // Attach username text to the player
+                newPlayer.setData("usernameText", usernameText);
                 newPlayer.setDepth(99999);
+    
                 gameElements.push(newPlayer);
             } else {
                 const oldX = existingPlayer.x;
                 const oldY = existingPlayer.y;
+    
+                // Update existing player's position and username text
                 existingPlayer.setPosition(op.x, op.y);
-
+                const usernameText = existingPlayer.getData("usernameText");
+                if (usernameText) {
+                    usernameText.setPosition(op.x, op.y - 18);
+                }
+    
                 if (oldX !== op.x) {
                     if (oldX > op.x) {
                         existingPlayer.play("walk-left", true);
                     } else {
                         existingPlayer.play("walk-right", true);
                     }
-                }
-                else if (oldY !== op.y) {
+                } else if (oldY !== op.y) {
                     if (oldY > op.y) {
                         existingPlayer.play("walk-back", true);
                     } else {
@@ -61,8 +85,9 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
                     }
                 }
             }
-        })
+        });
     }
+    
 
 
     useEffect(() => {
@@ -126,6 +151,18 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
             playerRef.current = this.physics.add.sprite(playerPosition.x, playerPosition.y, "character");
             (playerRef.current).setCollideWorldBounds(true);
             (playerRef.current).setDepth(99999);
+
+            const usernameText = this.add.text(playerPosition.x, playerPosition.y - 18, userName, {
+                fontSize: '10px',
+                color: '#ffffff',
+                padding: { x: 2, y: 2 },
+                resolution: 20,
+                align: 'center',
+            });
+            usernameText.setOrigin(0.5, 0.5);
+            usernameText.setDepth(99999);
+
+            (this as any).usernameText = usernameText;
 
             mainCamera.startFollow(playerRef.current, true, 0.5, 0.5);
             mainCamera.setZoom(1);
@@ -191,8 +228,13 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
         function update(this: Phaser.Scene) {
             const player = playerRef.current!;
             const cursors = cursorsRef.current!;
+            const usernameText = (this as any).usernameText;
             let moved = false;
             const speed = 100;
+
+            if (usernameText) {
+                usernameText.setPosition(player.x, player.y - 18);
+            }
 
             player.setVelocity(0);
 

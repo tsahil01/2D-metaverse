@@ -6,12 +6,14 @@ import { OtherUser } from "@/lib/types";
 import { useEffect, useRef, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { Game } from "./game";
+import { userNameAtom } from "@/lib/atom/userNameAtom";
 
 export function WebSocketInit({ spaceId, token }: { spaceId: string, token: string }) {
     const wsRef = useRef<WebSocket | null>(null);
     const avatar = useRecoilValue(avatarAtom);
     const setWs = useSetRecoilState(wsAtom);
     const setPlayerPosition = useSetRecoilState(playerPositionAtom);
+    const userName = useRecoilValue(userNameAtom);
     const otherPlayersRef = useRef<OtherUser[]>([]);
     const [settingWs, setSettingWs] = useState(true);
 
@@ -32,6 +34,7 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                     spaceId,
                     token,
                     avatar,
+                    userName
                 }
             }));
         };
@@ -46,7 +49,8 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                         {
                             userId: u.userId,
                             x: u.x,
-                            y: u.y
+                            y: u.y,
+                            userName: u.userName
                         }
                     ));
                     otherPlayersRef.current = opArray;
@@ -58,7 +62,8 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                     const newPlayer: OtherUser = {
                         userId: data.payload.userId,
                         x: data.payload.x,
-                        y: data.payload.y
+                        y: data.payload.y,
+                        userName: data.payload.userName
                     }
                     otherPlayersRef.current.push(newPlayer);
                     break;

@@ -46,5 +46,6 @@ export interface AvatarInterface {
 export interface OtherUser {
     userId: string;
     x: number;
-    y: number
+    y: number;
+    userName?: string;
 }
