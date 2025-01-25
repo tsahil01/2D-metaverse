@@ -112,7 +112,7 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
                 create,
                 update,
             },
-            pixelArt: true,
+            pixelArt: false,
         };
         const game = new Phaser.Game(config);
 

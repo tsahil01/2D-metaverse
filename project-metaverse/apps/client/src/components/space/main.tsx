@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { SpaceInit } from "./spaceInit";
 import { WebSocketInit } from "./web-socket-init";
 
-export function SpaceMain({ spaceId = "cm628eno4000hk41j471e3kuo" }: { spaceId: string }) {
+export function SpaceMain({ spaceId }: { spaceId: string }) {
     const [isLoading, setIsLoading] = useState(true);
     const [spaceName, setSpaceName] = useState<string | null>(null);
 
