@@ -134,6 +134,21 @@ export class User {
                     })
                     break;
                 }
+
+                case "message": {
+                    const spaceId = this.spaceId;
+                    const sendTo = parseData.payload.to;
+                    const sender = this.userId;
+                    const finalMsg = {
+                        type: "new-message",
+                        payload: {
+                            message: parseData.payload.message,
+                            sender
+                        }
+                    }
+                    RoomManager.getInstance().sendToUsers(finalMsg, spaceId!, sendTo);
+                    break;
+                }
             }
         })
     }

@@ -94,6 +94,11 @@ export function WebSocketInit({ spaceId, token }: { spaceId: string, token: stri
                     otherPlayersRef.current.splice(index, 1);
                     break;
                 }
+
+                case "new-message": {
+                    console.log("New Message", data.payload);
+                    break;
+                }
             }
         };
 

@@ -33,10 +33,10 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
             const existingPlayer = gameElements.find((e) => e.getData("userId") === op.userId);
             if (!existingPlayer) {
                 console.log("Creating new player", op);
-    
+
                 const newPlayer = this.physics.add.sprite(op.x, op.y, "character");
                 newPlayer.setData("userId", op.userId);
-    
+
                 const usernameText = this.add.text(op.x, op.y - 10, op.userName || "Unknown", {
                     fontSize: '10px',
                     color: 'white',
@@ -46,21 +46,21 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
                 });
                 usernameText.setOrigin(0.5, 0.5);
                 usernameText.setDepth(99999);
-    
+
                 newPlayer.setData("usernameText", usernameText);
                 newPlayer.setDepth(99999);
-    
+
                 gameElements.push(newPlayer);
             } else {
                 const oldX = existingPlayer.x;
                 const oldY = existingPlayer.y;
-    
+
                 existingPlayer.setPosition(op.x, op.y);
                 const usernameText = existingPlayer.getData("usernameText");
                 if (usernameText) {
                     usernameText.setPosition(op.x, op.y - 18);
                 }
-    
+
                 if (oldX !== op.x) {
                     if (oldX > op.x) {
                         existingPlayer.play("walk-left", true);
@@ -83,8 +83,28 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
             }
         });
     }
-    
 
+    function chatManagement(this: Phaser.Scene) {
+        otherPlayersRef.current?.forEach((op) => {
+            const player = playerRef.current;
+            if (!player) return;
+            const playerX = Math.round(player.x);
+            const playerY = Math.round(player.y);
+
+            if (Math.abs(playerX - op.x) < 50 && Math.abs(playerY - op.y) < 50) {
+                console.log("Sendinggggg", op.userId);
+                ws?.send(
+                    JSON.stringify({
+                        type: "message",
+                        payload: {
+                            message: "Hi there!",
+                            to: op.userId
+                        }
+                    })
+                );
+            }
+        })
+    }
 
     useEffect(() => {
         if (playerRef.current) {
@@ -269,6 +289,7 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
             }
 
             updateOtherPlayers.call(this);
+
             if (lastXRef.current !== player.x || lastYRef.current !== player.y) {
                 ws?.send(
                     JSON.stringify({
@@ -290,6 +311,8 @@ export function Game({ otherPlayersRef }: { otherPlayersRef: React.RefObject<Oth
                 const targetY = player.y;
                 mainCamera.pan(targetX, targetY, 200);
             }
+
+            chatManagement.call(this);
         }
 
         return () => {

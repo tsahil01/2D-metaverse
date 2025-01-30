@@ -30,7 +30,7 @@ export class RoomManager {
         }
         this.rooms.set(spaceId, (this.rooms.get(spaceId)?.filter((u) => u.id !== user.id)) ?? []);
         if (this.rooms.get(spaceId)?.length === 0) {
-            this.rooms.delete(spaceId); 
+            this.rooms.delete(spaceId);
         }
     }
 
@@ -43,5 +43,13 @@ export class RoomManager {
                 u.send(message);
             }
         });
+    }
+
+    public sendToUsers(message: any, roomId: string, to: string) {
+        if (!this.rooms.has(roomId)) return;
+        const user = this.rooms.get(roomId)?.find((u) => u.userId === to);
+        if (user) {
+            user.send(message);
+        }
     }
 }
